@@ -119,6 +119,133 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1001 &184574980
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4106321731632174707, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_Name
+      value: player_0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7091590659875396036, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 4.2405543
+      objectReference: {fileID: 0}
+    - target: {fileID: 7091590659875396036, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 3.9779565
+      objectReference: {fileID: 0}
+    - target: {fileID: 7091590659875396036, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -2.18
+      objectReference: {fileID: 0}
+    - target: {fileID: 7091590659875396036, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.1212
+      objectReference: {fileID: 0}
+    - target: {fileID: 7091590659875396036, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7091590659875396036, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7091590659875396036, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7091590659875396036, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7091590659875396036, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7091590659875396036, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7091590659875396036, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7091590659875396036, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+--- !u!1 &206693320
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 206693321}
+  m_Layer: 0
+  m_Name: CeillingCheck
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &206693321
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 206693320}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 416828689}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &299923623
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 299923624}
+  m_Layer: 0
+  m_Name: GroundCheck
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &299923624
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 299923623}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 416828689}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &416828687
 GameObject:
   m_ObjectHideFlags: 0
@@ -131,6 +258,7 @@ GameObject:
   - component: {fileID: 416828688}
   - component: {fileID: 416828690}
   - component: {fileID: 416828691}
+  - component: {fileID: 416828692}
   m_Layer: 0
   m_Name: Final_Boss
   m_TagString: Untagged
@@ -205,10 +333,12 @@ Transform:
   m_GameObject: {fileID: 416828687}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.858, y: 1.6768, z: 0}
-  m_LocalScale: {x: 5.1856484, y: 5.0062556, z: 1}
+  m_LocalPosition: {x: -8.04, y: 1.23, z: 0}
+  m_LocalScale: {x: 8.172582, y: 7.604002, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 206693321}
+  - {fileID: 299923624}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &416828690
@@ -245,8 +375,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c672824927755194ab3294acf52ae564, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  controller: {fileID: 0}
+  controller: {fileID: 416828692}
   runSpeed: 5
+--- !u!114 &416828692
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 416828687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4b8c474b5dfb54458d6e8374d7bc983, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterController2D
+  m_JumpForce: 400
+  m_CrouchSpeed: 0.36
+  m_MovementSmoothing: 0.05
+  m_AirControl: 0
+  m_WhatIsGround:
+    serializedVersion: 2
+    m_Bits: 0
+  m_GroundCheck: {fileID: 299923624}
+  m_CeilingCheck: {fileID: 206693321}
+  m_CrouchDisableCollider: {fileID: 0}
+  OnLandEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  OnCrouchEvent:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1678471519
 GameObject:
   m_ObjectHideFlags: 0
@@ -390,3 +548,4 @@ SceneRoots:
   m_Roots:
   - {fileID: 1678471522}
   - {fileID: 416828689}
+  - {fileID: 184574980}
