@@ -219,19 +219,47 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 204875961192711998, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
       propertyPath: m_SortingLayer
-      value: 2
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 204875961192711998, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
       propertyPath: m_SortingLayerID
       value: 1551550687
       objectReference: {fileID: 0}
+    - target: {fileID: 1253559278746807146, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_JumpForce
+      value: 900
+      objectReference: {fileID: 0}
+    - target: {fileID: 1253559278746807146, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_AirControl
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1253559278746807146, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_WhatIsGround.m_Bits
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 4106321731632174707, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
       propertyPath: m_Name
       value: player_0
       objectReference: {fileID: 0}
+    - target: {fileID: 5460566623878218593, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.066
+      objectReference: {fileID: 0}
+    - target: {fileID: 5460566623878218593, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.547
+      objectReference: {fileID: 0}
+    - target: {fileID: 5471372143768118126, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.033
+      objectReference: {fileID: 0}
+    - target: {fileID: 5471372143768118126, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.609
+      objectReference: {fileID: 0}
     - target: {fileID: 6382371767999383649, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
       propertyPath: m_GravityScale
-      value: 3
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 6382371767999383649, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
       propertyPath: m_CollisionDetection
@@ -239,11 +267,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7091590659875396036, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
       propertyPath: m_LocalScale.x
-      value: 4.2405543
+      value: 4.2
       objectReference: {fileID: 0}
     - target: {fileID: 7091590659875396036, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
       propertyPath: m_LocalScale.y
-      value: 3.9779565
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 7091590659875396036, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
       propertyPath: m_LocalPosition.x
@@ -285,6 +313,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8400057660617938740, guid: e2e266fce55fa714b863baf97c7dfe82, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -304,7 +336,7 @@ GameObject:
   - component: {fileID: 187954054}
   - component: {fileID: 187954057}
   - component: {fileID: 187954056}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4237,7 +4269,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 18
+  orthographic size: 17
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -4262,7 +4294,7 @@ Transform:
   m_GameObject: {fileID: 1678471519}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8, y: 3, z: -10}
+  m_LocalPosition: {x: 8, y: 2, z: -10}
   m_LocalScale: {x: 0.87, y: 0.87, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
