@@ -5,6 +5,7 @@ public class GhostScript : MonoBehaviour
 {
     public float speed = 10f;
     public float transparentTime = 0.5f;
+    public int damage = 1;
 
     private Rigidbody2D rb;
     private SpriteRenderer sr;
@@ -18,17 +19,13 @@ public class GhostScript : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         sr = GetComponent<SpriteRenderer>();
 
-        // salvăm culoarea inițială
         originalColor = sr.color;
-
         rb.linearVelocity = new Vector2(-speed, 0);
     }
 
     void Update()
     {
-        screenBounds = Camera.main.ScreenToWorldPoint(
-            new Vector3(0, 0, 0)
-        );
+        screenBounds = Camera.main.ScreenToWorldPoint(Vector3.zero);
 
         if (transform.position.x < screenBounds.x - 1f)
         {
@@ -36,9 +33,21 @@ public class GhostScript : MonoBehaviour
         }
     }
 
-    void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        // NU pornim din nou dacă deja e transparentă
+        // DAMAGE PLAYER
+        if (other.CompareTag("Player"))
+        {
+            PlayerHealth playerHealth =
+                other.GetComponent<PlayerHealth>();
+
+            if (playerHealth != null)
+            {
+                playerHealth.TakeDamage(damage);
+            }
+        }
+
+        // EFECT TRANSPARENȚĂ (o singură dată)
         if (!isTransparent)
         {
             StartCoroutine(TransparentEffect());
@@ -49,16 +58,13 @@ public class GhostScript : MonoBehaviour
     {
         isTransparent = true;
 
-        // devine transparentă
         Color c = originalColor;
         c.a = 0.4f;
         sr.color = c;
 
         yield return new WaitForSeconds(transparentTime);
 
-        // revine EXACT la culoarea inițială
         sr.color = originalColor;
-
         isTransparent = false;
     }
 }

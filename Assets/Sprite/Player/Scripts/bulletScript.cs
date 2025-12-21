@@ -9,11 +9,15 @@ public class bulletScript : MonoBehaviour
     
         rb.linearVelocity = transform.right * speed;
     }
-    void OnTriggerEnter2D(Collider2D hitInfo)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        Debug.Log(hitInfo.name);
-        Destroy(gameObject);
+        if (collision.CompareTag("Enemy"))
+        {
+            Destroy(collision.gameObject); // distruge inamicul
+            Destroy(gameObject);            // distruge glonțul
+        }
     }
+    
 
     
 
