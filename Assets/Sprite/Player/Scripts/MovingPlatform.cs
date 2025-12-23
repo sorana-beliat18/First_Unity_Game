@@ -4,39 +4,60 @@ public class MovingPlatform : MonoBehaviour
 {
     public float speed = 2f;
     public Transform[] points;
+    public bool reverse;   // 👈 nou
 
     private int i;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
-        transform.position = points[0].position; 
+        if (!reverse)
+        {
+            i = 0;
+        }
+        else
+        {
+            i = points.Length - 1;
+        }
+
+        transform.position = points[i].position;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if(Vector3.Distance(transform.position, points[i].position)<0.01f)
+        if (Vector3.Distance(transform.position, points[i].position) < 0.01f)
         {
-            i++;
-            if(i==points.Length)
+            if (!reverse)
             {
-                i = 0;
+                i++;
+                if (i >= points.Length)
+                    i = 0;
+            }
+            else
+            {
+                i--;
+                if (i < 0)
+                    i = points.Length - 1;
             }
         }
-        transform.position = Vector3.MoveTowards(transform.position, points[i].position, speed * Time.deltaTime);
+
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            points[i].position,
+            speed * Time.deltaTime
+        );
     }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.tag == "Player")
+        if (collision.gameObject.CompareTag("Player"))
         {
             collision.transform.SetParent(transform);
         }
     }
+
     private void OnCollisionExit2D(Collision2D collision)
     {
-        if (collision.gameObject.tag == "Player")
+        if (collision.gameObject.CompareTag("Player"))
         {
             collision.transform.SetParent(null);
         }

@@ -17,7 +17,6 @@ public class PlayerHealth : MonoBehaviour
     {
         currentLives -= damage;
         currentLives = Mathf.Clamp(currentLives, 0, maxLives);
-
         healthBar.SetHealth(currentLives);
 
         if (currentLives <= 0)
@@ -26,8 +25,28 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
+    public void ResetHealth()
+    {
+        currentLives = maxLives;
+        healthBar.SetHealth(currentLives);
+    }
+
     void Die()
     {
-        Debug.Log("PLAYER DEAD");
+        Vector3 respawnPosition;
+
+        if (Checkpoint.reached)
+        {
+            respawnPosition = Checkpoint.respawnPoint;
+        }
+        else
+        {
+            respawnPosition = GameObject
+                .FindGameObjectWithTag("StartPoint")
+                .transform.position;
+        }
+
+        transform.position = respawnPosition;
+        ResetHealth();
     }
 }

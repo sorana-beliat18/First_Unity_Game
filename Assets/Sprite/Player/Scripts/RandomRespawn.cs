@@ -4,7 +4,7 @@ using UnityEngine;
 public class RandomRespawn : MonoBehaviour
 {
     public GameObject ghostPrefab;
-    public float RandomRespawnTime = 5f;
+    public float RandomRespawnTime = 15f;
     private Vector2 screenBounds;
 
     void Start()
