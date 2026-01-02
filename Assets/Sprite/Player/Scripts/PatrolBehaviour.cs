@@ -1,42 +1,82 @@
 using UnityEngine;
 
-public class PatrolBehaviour : MonoBehaviour
+public class PatrolBetweenPoints : MonoBehaviour
 {
+    [Header("Patrol Points")]
+    public Transform pointA; // stânga
+    public Transform pointB; // dreapta
+
+    [Header("Movement")]
     public float speed = 2f;
-    public float rayDist = 1f;
-    public LayerMask groundLayer;
-    public Transform groundDetection;
 
-    private bool movingRight = true;
+    private Rigidbody2D rb;
+    private bool movingRight;
 
-    void Update()
+    void Start()
+{
+    rb = GetComponent<Rigidbody2D>();
+
+    // Asigură ordinea punctelor
+    if (pointA.position.x > pointB.position.x)
     {
-        // mișcare în direcția corectă
-        Vector2 direction = movingRight ? Vector2.right : Vector2.left;
-        transform.Translate(direction * speed * Time.deltaTime);
+        Transform temp = pointA;
+        pointA = pointB;
+        pointB = temp;
+    }
 
-        // verificăm dacă mai e sol în față
-        RaycastHit2D groundCheck = Physics2D.Raycast(
-            groundDetection.position,
-            Vector2.down,
-            rayDist,
-            groundLayer
-        );
+    // Merge inițial spre dreapta
+    movingRight = true;
 
-        // dacă nu mai e sol → întoarce
-        if (!groundCheck.collider)
+    // 🔑 FIXUL REAL: sprite-ul e desenat spre STÂNGA
+    Vector3 scale = transform.localScale;
+    scale.x = -Mathf.Abs(scale.x); // fața la dreapta
+    transform.localScale = scale;
+}
+
+
+    void FixedUpdate()
+    {
+        Vector2 targetPos = rb.position;
+
+        if (movingRight)
         {
-            Flip();
+            targetPos.x += speed * Time.fixedDeltaTime;
+
+            if (targetPos.x >= pointB.position.x)
+            {
+                targetPos.x = pointB.position.x;
+                movingRight = false;
+                Flip();
+            }
         }
+        else
+        {
+            targetPos.x -= speed * Time.fixedDeltaTime;
+
+            if (targetPos.x <= pointA.position.x)
+            {
+                targetPos.x = pointA.position.x;
+                movingRight = true;
+                Flip();
+            }
+        }
+
+        rb.MovePosition(targetPos);
     }
 
     void Flip()
     {
-        movingRight = !movingRight;
-
-        // rotire vizuală
         Vector3 scale = transform.localScale;
         scale.x *= -1;
         transform.localScale = scale;
+    }
+
+    void OnDrawGizmos()
+    {
+        if (pointA && pointB)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawLine(pointA.position, pointB.position);
+        }
     }
 }
