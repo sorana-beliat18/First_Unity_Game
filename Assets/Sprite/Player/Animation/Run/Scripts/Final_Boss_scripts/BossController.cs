@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.AI; // OBLIGATORIU pentru NavMesh
 
 public class BossController : MonoBehaviour
 {
@@ -6,6 +7,7 @@ public class BossController : MonoBehaviour
     public Transform player;
     public Rigidbody2D rb;
     public Animator animator;
+    private NavMeshAgent agent; // Adăugat pentru GPS
 
     [Header("Movement")]
     public float moveSpeed = 4f;
@@ -20,86 +22,73 @@ public class BossController : MonoBehaviour
     [Header("Rage")]
     public int rageLevel = 0; // 0 = Attack3, 1 = Attack1, 2 = Attack2
 
-    [Header("Physics & Jumping")]
-    public float jumpForce = 10f;
-    public Transform groundCheck;
-    public LayerMask groundLayer;
-    public Transform wallCheck;
-    private bool isGrounded;
-
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        agent = GetComponent<NavMeshAgent>(); // Inițializăm agentul
+
+        // Setări vitale pentru ca agentul să nu se bată cu fizica 2D
+        agent.updateRotation = false;
+        agent.updateUpAxis = false;
+        agent.speed = moveSpeed;
+
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(transform.position, out hit, 2.0f, NavMesh.AllAreas))
+        {
+            agent.Warp(hit.position); // "Teleportează" agentul pe zona validă
+        }
     }
 
-    void FixedUpdate()
+    void Update() // Mutăm logica în Update pentru NavMesh
     {
         if (!player) return;
 
         if (!hasStarted)
         {
+            // Boss-ul pornește doar când player-ul se mișcă prima dată
             if (Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0)
                 hasStarted = true;
 
-            Stop();
+            StopBoss();
             return;
         }
 
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
-        bool wallAhead = Physics2D.OverlapCircle(wallCheck.position, 0.2f, groundLayer);
-
-        if (isGrounded && wallAhead)
-        {
-            Jump();
-        }
-
-        float distance = Vector2.Distance(rb.position, player.position);
+        float distance = Vector2.Distance(transform.position, player.position);
 
         if (distance <= attackRange)
         {
-            Stop();
+            StopBoss();
             TryAttack();
         }
         else if (distance > stopDistance)
         {
-            Move(); // Acum functia aceasta exista mai jos!
+            MoveWithNavMesh();
         }
         else
         {
-            Stop();
+            StopBoss();
         }
-    }
 
-    // --- FUNCTIA CARE LIPSEA ---
-    void Move()
-    {
-        float diffX = player.position.x - rb.position.x;
-
-        // Evitam tremuratul daca e foarte aproape
-        if (Mathf.Abs(diffX) < 0.1f)
+        // Controlăm Flip-ul în funcție de unde vrea agentul să meargă
+        if (agent.velocity.x != 0)
         {
-            Stop();
-            return;
+            Flip(Mathf.Sign(agent.velocity.x));
         }
-
-        float dir = Mathf.Sign(diffX);
-        rb.linearVelocity = new Vector2(dir * moveSpeed, rb.linearVelocity.y);
-
-        // Setam animatia de mers
-        animator.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
-        Flip(dir);
     }
 
-    void Jump()
+    void MoveWithNavMesh()
     {
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-        animator.SetTrigger("Jump");
+        agent.isStopped = false; // Permitem mișcarea
+        agent.SetDestination(player.position); // GPS-ul calculează drumul
+        float currentSpeed = agent.velocity.sqrMagnitude;
+        animator.SetFloat("Speed", currentSpeed>0.1f ? moveSpeed : 0f);
     }
 
-    void Stop()
+    void StopBoss()
     {
-        rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+        agent.isStopped = true; // Oprim agentul de NavMesh
+        agent.velocity = Vector2.zero; // Resetăm viteza fizică
         animator.SetFloat("Speed", 0f);
     }
 
@@ -122,16 +111,17 @@ public class BossController : MonoBehaviour
 
     public void TakeHit()
     {
-        animator.SetTrigger("Hurt"); // Am adaugat si animatia de Hurt aici
+        animator.SetTrigger("Hurt");
         rageLevel = Mathf.Clamp(rageLevel + 1, 0, 2);
         lastAttackTime = -999f;
         TryAttack();
     }
+
     public void Die()
     {
         animator.SetTrigger("Dead");
-        hasStarted = false; // Oprim urmarirea
-        rb.linearVelocity = Vector2.zero; // Oprim orice miscare fizica
-        this.enabled = false; // Dezactivam scriptul ca sa nu mai faca nimic
+        hasStarted = false;
+        agent.isStopped = true;
+        this.enabled = false;
     }
 }
