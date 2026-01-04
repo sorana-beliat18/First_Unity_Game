@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.AI; // OBLIGATORIU pentru NavMesh
 
 public class BossController : MonoBehaviour
 {
@@ -7,88 +6,149 @@ public class BossController : MonoBehaviour
     public Transform player;
     public Rigidbody2D rb;
     public Animator animator;
-    private NavMeshAgent agent; // Adăugat pentru GPS
 
     [Header("Movement")]
     public float moveSpeed = 4f;
-    public float stopDistance = 1.5f;
+    public float jumpForce = 12f;
     private bool hasStarted = false;
+    private bool isFacingRight = true;
 
-    [Header("Attack")]
+    [Header("Detection Points")]
+    public Transform groundCheck;
+    public Transform wallCheck;
+    public LayerMask groundLayer;
+    public float checkRadius = 0.2f;
+
+    [Header("Attack Settings")]
     public float attackRange = 2f;
     public float attackCooldown = 1.5f;
     private float lastAttackTime = -999f;
+    public int rageLevel = 0;
 
-    [Header("Rage")]
-    public int rageLevel = 0; // 0 = Attack3, 1 = Attack1, 2 = Attack2
+    // --- AICI PUNEM VARIABILELE NOI PENTRU INTELIGENȚĂ ---
+    [Header("AI Intelligence")]
+    public float obstacleDetectionDistance = 1.0f;
+    private float stuckTimer = 0f;
+    private bool isAlternativeRouteActive = false;
+    private float alternativeRouteTimer = 0f;
+    private float altDirection = 1f;
+
+    [Header("Moving Platforms Support")]
+    public Transform gapCheck; // Trage noul obiect aici
+    private bool isOnPlatform = false;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
-        agent = GetComponent<NavMeshAgent>(); // Inițializăm agentul
-
-        // Setări vitale pentru ca agentul să nu se bată cu fizica 2D
-        agent.updateRotation = false;
-        agent.updateUpAxis = false;
-        agent.speed = moveSpeed;
-
-        NavMeshHit hit;
-        if (NavMesh.SamplePosition(transform.position, out hit, 2.0f, NavMesh.AllAreas))
-        {
-            agent.Warp(hit.position); // "Teleportează" agentul pe zona validă
-        }
     }
 
-    void Update() // Mutăm logica în Update pentru NavMesh
+    void Update()
     {
         if (!player) return;
 
         if (!hasStarted)
         {
-            // Boss-ul pornește doar când player-ul se mișcă prima dată
-            if (Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0)
-                hasStarted = true;
-
-            StopBoss();
+            // ... (codul tău de start)
             return;
         }
 
-        float distance = Vector2.Distance(transform.position, player.position);
+        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
 
-        if (distance <= attackRange)
+        // Verificăm mediul
+        bool isGrounded = Physics2D.OverlapCircle(groundCheck.position, checkRadius, groundLayer);
+        bool isWallInFront = Physics2D.OverlapCircle(wallCheck.position, checkRadius, groundLayer);
+
+        // LOGICA DE ATAC (Dacă este aproape)
+        if (distanceToPlayer <= attackRange)
         {
-            StopBoss();
+            StopBoss(); // Această funcție pune viteza pe 0 și Speed pe 0
             TryAttack();
         }
-        else if (distance > stopDistance)
+        // LOGICA DE MIȘCARE
+        else
         {
-            MoveWithNavMesh();
+            MoveTowardsPlayer(isGrounded, isWallInFront);
+        }
+    }
+
+    // --- ACEASTA ESTE METODA NOUĂ ȘI DETALIATĂ ---
+    void MoveTowardsPlayer(bool grounded, bool wall)
+    {
+        float directionToPlayer = Mathf.Sign(player.position.x - transform.position.x);
+        float finalMoveDir = directionToPlayer;
+
+        // --- LOGICA ÎMBUNĂTĂȚITĂ PENTRU PRĂPASTIE ---
+        bool isGapInFront = !Physics2D.OverlapCircle(gapCheck.position, checkRadius, groundLayer);
+
+        if (grounded && isGapInFront)
+        {
+            // 1. Dacă playerul e mai sus, SARE obligatoriu
+            if (player.position.y > transform.position.y + 0.5f)
+            {
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            }
+            // 2. Dacă playerul e departe pe orizontală (mai mult de 3 unități), SARE înainte (Long Jump)
+            else if (Mathf.Abs(player.position.x - transform.position.x) > 3f)
+            {
+                rb.linearVelocity = new Vector2(directionToPlayer * moveSpeed, jumpForce * 0.8f);
+            }
+            // 3. Dacă playerul e chiar sub el sau foarte aproape, se oprește (așteaptă platforma)
+            else
+            {
+                StopBoss();
+                return;
+            }
+        }
+        // 1. LOGICA DE EVITARE PERETE
+        if (wall)
+        {
+            if (grounded)
+            {
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            }
+
+            stuckTimer += Time.deltaTime;
+            if (stuckTimer > 0.5f)
+            {
+                isAlternativeRouteActive = true;
+                alternativeRouteTimer = 1.0f;
+                altDirection = -directionToPlayer;
+                stuckTimer = 0;
+            }
         }
         else
         {
-            StopBoss();
+            stuckTimer = 0;
         }
 
-        // Controlăm Flip-ul în funcție de unde vrea agentul să meargă
-        if (agent.velocity.x != 0)
+        // 2. APLICARE RUTĂ ALTERNATIVĂ (Dacă e blocat)
+        if (isAlternativeRouteActive)
         {
-            Flip(Mathf.Sign(agent.velocity.x));
+            finalMoveDir = altDirection;
+            alternativeRouteTimer -= Time.deltaTime;
+            if (alternativeRouteTimer <= 0) isAlternativeRouteActive = false;
+        }
+
+        // 3. EXCEPȚIE: Dacă player-ul e deasupra, sare oricum (Jump up)
+        if (grounded && player.position.y > transform.position.y + 2f)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+        }
+
+        // Aplicăm viteza finală
+        rb.linearVelocity = new Vector2(finalMoveDir * moveSpeed, rb.linearVelocity.y);
+        animator.SetFloat("Speed", moveSpeed);
+
+        // Flip visual
+        if ((finalMoveDir > 0 && !isFacingRight) || (finalMoveDir < 0 && isFacingRight))
+        {
+            Flip();
         }
     }
-
-    void MoveWithNavMesh()
-    {
-        agent.isStopped = false; // Permitem mișcarea
-        agent.SetDestination(player.position); // GPS-ul calculează drumul
-        float currentSpeed = agent.velocity.sqrMagnitude;
-        animator.SetFloat("Speed", currentSpeed>0.1f ? moveSpeed : 0f);
-    }
-
     void StopBoss()
     {
-        agent.isStopped = true; // Oprim agentul de NavMesh
-        agent.velocity = Vector2.zero; // Resetăm viteza fizică
+        rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
         animator.SetFloat("Speed", 0f);
     }
 
@@ -101,12 +161,10 @@ public class BossController : MonoBehaviour
         lastAttackTime = Time.time;
     }
 
-    void Flip(float dir)
+    void Flip()
     {
-        if (dir == 0) return;
-        Vector3 s = transform.localScale;
-        s.x = Mathf.Abs(s.x) * (dir > 0 ? 1 : -1);
-        transform.localScale = s;
+        isFacingRight = !isFacingRight;
+        transform.Rotate(0, 180, 0);
     }
 
     public void TakeHit()
@@ -121,7 +179,26 @@ public class BossController : MonoBehaviour
     {
         animator.SetTrigger("Dead");
         hasStarted = false;
-        agent.isStopped = true;
+        rb.linearVelocity = Vector2.zero;
         this.enabled = false;
+    }
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        // Când atinge o platformă mișcătoare, se "lipește" de ea
+        if (collision.gameObject.CompareTag("MovingPlatform"))
+        {
+            transform.parent = collision.transform;
+            isOnPlatform = true;
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        // Când pleacă de pe ea, redevine independent
+        if (collision.gameObject.CompareTag("MovingPlatform"))
+        {
+            transform.parent = null;
+            isOnPlatform = false;
+        }
     }
 }
