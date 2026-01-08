@@ -10,13 +10,11 @@ public class MovingPlatform1_level3 : MonoBehaviour
 
     void Start()
     {
-        // Salvăm poziția de unde pleacă platforma la începutul jocului
         startPos = transform.position;
     }
 
     void Update()
     {
-        // Calculăm mișcarea stânga-dreapta ca un pendul
         float movement = Mathf.PingPong(Time.time * speed, distance);
 
         if (moveHorizontal)
@@ -25,21 +23,29 @@ public class MovingPlatform1_level3 : MonoBehaviour
             transform.position = startPos + new Vector3(0, movement, 0);
     }
 
-    // Această funcție face ca jucătorul să se miște ODATĂ cu platforma când stă pe ea
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Player") || collision.gameObject.CompareTag("Boss"))
+        // Verificăm dacă este Player-ul și dacă platforma este activă
+        if (collision.gameObject.CompareTag("Player") && gameObject.activeInHierarchy)
         {
             collision.transform.SetParent(transform);
         }
     }
 
-    // Când jucătorul sare de pe platformă, nu mai este "purtat" de ea
     private void OnCollisionExit2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Player") || collision.gameObject.CompareTag("Boss"))
+        if (collision.gameObject.CompareTag("Player"))
         {
-            collision.transform.SetParent(null);
+            // Aceasta este linia critică: verificăm dacă platforma ȘI jucătorul sunt încă activi
+            if (gameObject.activeInHierarchy && collision.gameObject.activeInHierarchy)
+            {
+                collision.transform.SetParent(null);
+            }
+            else
+            {
+                // Dacă unul dintre ele se dezactivează, forțăm detașarea fără eroare
+                collision.transform.parent = null;
+            }
         }
     }
 }

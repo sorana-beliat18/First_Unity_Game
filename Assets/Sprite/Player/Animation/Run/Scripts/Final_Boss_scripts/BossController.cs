@@ -9,120 +9,127 @@ public class BossController : MonoBehaviour
 
     [Header("Movement")]
     public float moveSpeed = 4f;
-    public float jumpForce = 12f;
-    private bool hasStarted = false;
+    public float jumpForce = 18f;
     private bool isFacingRight = true;
+    private float currentMoveDir = 1f;
+    public float changeDirThreshold = 1.5f;
 
     [Header("Detection Points")]
     public Transform groundCheck;
     public Transform wallCheck;
+    public Transform gapCheck;
     public LayerMask groundLayer;
     public float checkRadius = 0.2f;
 
-    [Header("Attack Settings")]
+    [Header("Attack & Health Settings")]
     public float attackRange = 2f;
     public float attackCooldown = 1.5f;
     private float lastAttackTime = -999f;
     public int rageLevel = 0;
 
-    // --- AICI PUNEM VARIABILELE NOI PENTRU INTELIGENȚĂ ---
     [Header("AI Intelligence")]
-    public float obstacleDetectionDistance = 1.0f;
     private float stuckTimer = 0f;
     private bool isAlternativeRouteActive = false;
     private float alternativeRouteTimer = 0f;
     private float altDirection = 1f;
-
-    [Header("Moving Platforms Support")]
-    public Transform gapCheck; // Trage noul obiect aici
-    private bool isOnPlatform = false;
+    public float jumpScanDistance = 7f; // Mărit pentru a vedea platformele de departe
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        if (player == null) player = GameObject.FindGameObjectWithTag("Player")?.transform;
     }
 
     void Update()
     {
         if (!player) return;
 
-        if (!hasStarted)
-        {
-            // ... (codul tău de start)
-            return;
-        }
-
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
-
-        // Verificăm mediul
         bool isGrounded = Physics2D.OverlapCircle(groundCheck.position, checkRadius, groundLayer);
         bool isWallInFront = Physics2D.OverlapCircle(wallCheck.position, checkRadius, groundLayer);
 
-        // LOGICA DE ATAC (Dacă este aproape)
         if (distanceToPlayer <= attackRange)
         {
-            StopBoss(); // Această funcție pune viteza pe 0 și Speed pe 0
+            StopBoss();
             TryAttack();
         }
-        // LOGICA DE MIȘCARE
         else
         {
             MoveTowardsPlayer(isGrounded, isWallInFront);
         }
     }
 
-    // --- ACEASTA ESTE METODA NOUĂ ȘI DETALIATĂ ---
     void MoveTowardsPlayer(bool grounded, bool wall)
     {
-        float directionToPlayer = Mathf.Sign(player.position.x - transform.position.x);
-        float finalMoveDir = directionToPlayer;
+        float horizontalDist = player.position.x - transform.position.x;
+        float verticalDist = player.position.y - transform.position.y;
 
-        // --- LOGICA ÎMBUNĂTĂȚITĂ PENTRU PRĂPASTIE ---
+        // 1. DIRECȚIE CONSTANTĂ
+        if (horizontalDist > changeDirThreshold) currentMoveDir = 1f;
+        else if (horizontalDist < -changeDirThreshold) currentMoveDir = -1f;
+
+        float finalMoveDir = currentMoveDir;
+
+        // 2. DETECȚIE TAVAN ȘI SCANARE ÎN FAȚĂ
+        bool isCeilingAbove = Physics2D.Raycast(transform.position, Vector2.up, 2.5f, groundLayer);
+
+        // Scanăm în față pentru a găsi SOL (indiferent dacă e platformă fixă sau mobilă)
+        Vector2 scanDirection = new Vector2(currentMoveDir, -0.5f).normalized;
+        RaycastHit2D hit = Physics2D.Raycast(gapCheck.position, scanDirection, jumpScanDistance, groundLayer);
+        Debug.DrawRay(gapCheck.position, scanDirection * jumpScanDistance, Color.cyan);
+
         bool isGapInFront = !Physics2D.OverlapCircle(gapCheck.position, checkRadius, groundLayer);
 
+        // 3. LOGICA DE SĂRITURĂ/PRĂPASTIE (REPARATĂ)
         if (grounded && isGapInFront)
         {
-            // 1. Dacă playerul e mai sus, SARE obligatoriu
-            if (player.position.y > transform.position.y + 0.5f)
+            // DACĂ PLAYERUL E MAI SUS (indiferent dacă e prăpastie sau nu), SARE!
+            if (verticalDist > 1.2f && !isCeilingAbove)
             {
-                rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+                rb.linearVelocity = new Vector2(currentMoveDir * moveSpeed, jumpForce);
             }
-            // 2. Dacă playerul e departe pe orizontală (mai mult de 3 unități), SARE înainte (Long Jump)
-            else if (Mathf.Abs(player.position.x - transform.position.x) > 3f)
+            // DACĂ PLAYERUL E LA ACELAȘI NIVEL SAU MAI JOS, DAR AVEM O PLATFORMĂ ÎN FAȚĂ
+            else if (hit.collider != null)
             {
-                rb.linearVelocity = new Vector2(directionToPlayer * moveSpeed, jumpForce * 0.8f);
+                float distToLand = Vector2.Distance(gapCheck.position, hit.point);
+                if (distToLand < 5f && !isCeilingAbove)
+                {
+                    rb.linearVelocity = new Vector2(currentMoveDir * moveSpeed, jumpForce);
+                }
+                else
+                {
+                    StopBoss(); // Așteaptă platforma mobilă
+                    return;
+                }
             }
-            // 3. Dacă playerul e chiar sub el sau foarte aproape, se oprește (așteaptă platforma)
+            // DACĂ PLAYERUL E JOS ÎN PRĂPASTIE, NU SARE, DAR NICI NU ÎNGHEAȚĂ (Merge până la margine)
+            else if (verticalDist < -2f)
+            {
+                // Îl lăsăm să meargă, va cădea natural după player
+            }
             else
             {
                 StopBoss();
                 return;
             }
         }
-        // 1. LOGICA DE EVITARE PERETE
-        if (wall)
-        {
-            if (grounded)
-            {
-                rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-            }
 
+        // 4. LOGICA DE PERETE
+        if (wall && grounded && !isCeilingAbove)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce * 1.1f);
             stuckTimer += Time.deltaTime;
             if (stuckTimer > 0.5f)
             {
                 isAlternativeRouteActive = true;
-                alternativeRouteTimer = 1.0f;
-                altDirection = -directionToPlayer;
+                alternativeRouteTimer = 0.8f;
+                altDirection = -currentMoveDir;
                 stuckTimer = 0;
             }
         }
-        else
-        {
-            stuckTimer = 0;
-        }
+        else { stuckTimer = 0; }
 
-        // 2. APLICARE RUTĂ ALTERNATIVĂ (Dacă e blocat)
         if (isAlternativeRouteActive)
         {
             finalMoveDir = altDirection;
@@ -130,22 +137,16 @@ public class BossController : MonoBehaviour
             if (alternativeRouteTimer <= 0) isAlternativeRouteActive = false;
         }
 
-        // 3. EXCEPȚIE: Dacă player-ul e deasupra, sare oricum (Jump up)
-        if (grounded && player.position.y > transform.position.y + 2f)
-        {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-        }
-
-        // Aplicăm viteza finală
+        // 5. MIȘCAREA EFECTIVĂ
         rb.linearVelocity = new Vector2(finalMoveDir * moveSpeed, rb.linearVelocity.y);
-        animator.SetFloat("Speed", moveSpeed);
+        animator.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
 
-        // Flip visual
         if ((finalMoveDir > 0 && !isFacingRight) || (finalMoveDir < 0 && isFacingRight))
         {
             Flip();
         }
     }
+
     void StopBoss()
     {
         rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
@@ -155,50 +156,39 @@ public class BossController : MonoBehaviour
     void TryAttack()
     {
         if (Time.time < lastAttackTime + attackCooldown) return;
-
+        float dir = Mathf.Sign(player.position.x - transform.position.x);
+        if ((dir > 0 && !isFacingRight) || (dir < 0 && isFacingRight)) Flip();
         animator.SetInteger("RageLevel", rageLevel);
         animator.SetTrigger("Attack");
         lastAttackTime = Time.time;
     }
 
-    void Flip()
-    {
-        isFacingRight = !isFacingRight;
-        transform.Rotate(0, 180, 0);
-    }
+    void Flip() { isFacingRight = !isFacingRight; transform.Rotate(0, 180, 0); }
 
     public void TakeHit()
     {
         animator.SetTrigger("Hurt");
         rageLevel = Mathf.Clamp(rageLevel + 1, 0, 2);
-        lastAttackTime = -999f;
-        TryAttack();
+        lastAttackTime = Time.time + 0.5f;
     }
 
     public void Die()
     {
         animator.SetTrigger("Dead");
-        hasStarted = false;
         rb.linearVelocity = Vector2.zero;
+        rb.simulated = false;
         this.enabled = false;
     }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        // Când atinge o platformă mișcătoare, se "lipește" de ea
         if (collision.gameObject.CompareTag("MovingPlatform"))
-        {
-            transform.parent = collision.transform;
-            isOnPlatform = true;
-        }
+            transform.SetParent(collision.transform, true);
     }
 
     private void OnCollisionExit2D(Collision2D collision)
     {
-        // Când pleacă de pe ea, redevine independent
-        if (collision.gameObject.CompareTag("MovingPlatform"))
-        {
+        if (collision.gameObject.CompareTag("MovingPlatform") && gameObject.activeInHierarchy)
             transform.parent = null;
-            isOnPlatform = false;
-        }
     }
 }
