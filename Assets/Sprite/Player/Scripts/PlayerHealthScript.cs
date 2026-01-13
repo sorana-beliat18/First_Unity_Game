@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Collections;
+
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -48,5 +50,31 @@ public class PlayerHealth : MonoBehaviour
 
         transform.position = respawnPosition;
         ResetHealth();
+        RespawnPowerUps();
     }
+    void RespawnPowerUps()
+    {
+    DoubleJumpPowerUp[] powerUps =
+        FindObjectsOfType<DoubleJumpPowerUp>(true); // include inactive
+
+    foreach (DoubleJumpPowerUp p in powerUps)
+    {
+        p.Respawn();
+    }
+   }
+   public void RespawnPowerUpAfterTime(DoubleJumpPowerUp powerUp, float time)
+{
+    StartCoroutine(RespawnPowerUpCoroutine(powerUp, time));
+}
+
+IEnumerator RespawnPowerUpCoroutine(DoubleJumpPowerUp powerUp, float time)
+{
+    yield return new WaitForSeconds(time);
+    powerUp.Respawn();
+}
+
+
+
+
+
 }
