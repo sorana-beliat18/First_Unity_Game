@@ -1100,8 +1100,9 @@ SpriteRenderer:
   m_SpriteSortPoint: 0
 --- !u!4 &341792479
 Transform:
-  m_CorrespondingSourceObject: {fileID: 2526046076473984321, guid: 940513cae7353e242adab512d06515c1, type: 3}
-  m_PrefabInstance: {fileID: 8904359966260891642}
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 341792477}
   serializedVersion: 2
