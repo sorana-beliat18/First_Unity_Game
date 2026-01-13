@@ -6,6 +6,8 @@ public class PlayerCollect : MonoBehaviour
     public int maxStars = 10;
     public StarUI starUI;
 
+    public Door door; // 👈 REFERINȚĂ CĂTRE UȘĂ
+
     void Start()
     {
         starUI.UpdateStars(stars);
@@ -19,6 +21,7 @@ public class PlayerCollect : MonoBehaviour
         if (stars >= maxStars)
         {
             Debug.Log("AI STRÂNS TOATE STELUȚELE!");
+            door.OpenDoor(); // 🔥 DESCHIDE UȘA
         }
     }
 }
