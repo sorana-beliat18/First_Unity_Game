@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 public class BossController : MonoBehaviour
 {
@@ -6,189 +7,179 @@ public class BossController : MonoBehaviour
     public Transform player;
     public Rigidbody2D rb;
     public Animator animator;
+    public AudioSource rageSound;
+    private SpriteRenderer spriteRenderer;
+
+    [Header("Health & Stages")]
+    public float maxHealth = 100f;
+    private float currentHealth;
+    public float rage1Threshold = 70f;
+    public float rage2Threshold = 30f;
+    public int rageLevel = 0;
+    private bool isDead = false;
 
     [Header("Movement")]
     public float moveSpeed = 4f;
-    public float jumpForce = 18f;
     private bool isFacingRight = true;
-    private float currentMoveDir = 1f;
-    public float changeDirThreshold = 1.5f;
 
-    [Header("Detection Points")]
-    public Transform groundCheck;
-    public Transform wallCheck;
-    public Transform gapCheck;
-    public LayerMask groundLayer;
-    public float checkRadius = 0.2f;
-
-    [Header("Attack & Health Settings")]
-    public float attackRange = 2f;
-    public float attackCooldown = 1.5f;
+    [Header("Combat Settings")]
+    public float attackRange = 4.0f; // Ajustat pentru a preveni împingerea
+    public float attackCooldown = 2.0f;
     private float lastAttackTime = -999f;
-    public int rageLevel = 0;
 
-    [Header("AI Intelligence")]
-    private float stuckTimer = 0f;
-    private bool isAlternativeRouteActive = false;
-    private float alternativeRouteTimer = 0f;
-    private float altDirection = 1f;
-    public float jumpScanDistance = 7f; // Mărit pentru a vedea platformele de departe
+    [Header("Effects")]
+    public float shakeIntensity = 0.06f;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
-        if (player == null) player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        currentHealth = maxHealth;
+
+        // Căutăm automat jucătorul dacă nu este pus în Inspector
+        if (player == null)
+            player = GameObject.FindGameObjectWithTag("Player")?.transform;
     }
 
     void Update()
     {
-        if (!player) return;
+        if (!player || isDead) return;
+
+        // Efectul de tremurat pentru ultimul stadiu (Rage 2)
+        if (rageLevel == 2)
+        {
+            transform.localPosition += (Vector3)Random.insideUnitCircle * shakeIntensity;
+        }
 
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
-        bool isGrounded = Physics2D.OverlapCircle(groundCheck.position, checkRadius, groundLayer);
-        bool isWallInFront = Physics2D.OverlapCircle(wallCheck.position, checkRadius, groundLayer);
 
+        // LOGICĂ: Dacă e aproape, atacă. Dacă e departe, merge spre el.
         if (distanceToPlayer <= attackRange)
         {
-            StopBoss();
-            TryAttack();
+            StopMovement();
+            if (Time.time >= lastAttackTime + attackCooldown)
+            {
+                ExecuteAttack();
+            }
         }
         else
         {
-            MoveTowardsPlayer(isGrounded, isWallInFront);
+            MoveTowardsPlayer();
         }
     }
 
-    void MoveTowardsPlayer(bool grounded, bool wall)
+    void MoveTowardsPlayer()
     {
-        float horizontalDist = player.position.x - transform.position.x;
-        float verticalDist = player.position.y - transform.position.y;
+        float direction = (player.position.x > transform.position.x) ? 1f : -1f;
+        rb.linearVelocity = new Vector2(direction * moveSpeed, rb.linearVelocity.y);
 
-        // 1. DIRECȚIE CONSTANTĂ
-        if (horizontalDist > changeDirThreshold) currentMoveDir = 1f;
-        else if (horizontalDist < -changeDirThreshold) currentMoveDir = -1f;
+        if (animator != null)
+            animator.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
 
-        float finalMoveDir = currentMoveDir;
-
-        // 2. DETECȚIE TAVAN ȘI SCANARE ÎN FAȚĂ
-        bool isCeilingAbove = Physics2D.Raycast(transform.position, Vector2.up, 2.5f, groundLayer);
-
-        // Scanăm în față pentru a găsi SOL (indiferent dacă e platformă fixă sau mobilă)
-        Vector2 scanDirection = new Vector2(currentMoveDir, -0.5f).normalized;
-        RaycastHit2D hit = Physics2D.Raycast(gapCheck.position, scanDirection, jumpScanDistance, groundLayer);
-        Debug.DrawRay(gapCheck.position, scanDirection * jumpScanDistance, Color.cyan);
-
-        bool isGapInFront = !Physics2D.OverlapCircle(gapCheck.position, checkRadius, groundLayer);
-
-        // 3. LOGICA DE SĂRITURĂ/PRĂPASTIE (REPARATĂ)
-        if (grounded && isGapInFront)
-        {
-            // DACĂ PLAYERUL E MAI SUS (indiferent dacă e prăpastie sau nu), SARE!
-            if (verticalDist > 1.2f && !isCeilingAbove)
-            {
-                rb.linearVelocity = new Vector2(currentMoveDir * moveSpeed, jumpForce);
-            }
-            // DACĂ PLAYERUL E LA ACELAȘI NIVEL SAU MAI JOS, DAR AVEM O PLATFORMĂ ÎN FAȚĂ
-            else if (hit.collider != null)
-            {
-                float distToLand = Vector2.Distance(gapCheck.position, hit.point);
-                if (distToLand < 5f && !isCeilingAbove)
-                {
-                    rb.linearVelocity = new Vector2(currentMoveDir * moveSpeed, jumpForce);
-                }
-                else
-                {
-                    StopBoss(); // Așteaptă platforma mobilă
-                    return;
-                }
-            }
-            // DACĂ PLAYERUL E JOS ÎN PRĂPASTIE, NU SARE, DAR NICI NU ÎNGHEAȚĂ (Merge până la margine)
-            else if (verticalDist < -2f)
-            {
-                // Îl lăsăm să meargă, va cădea natural după player
-            }
-            else
-            {
-                StopBoss();
-                return;
-            }
-        }
-
-        // 4. LOGICA DE PERETE
-        if (wall && grounded && !isCeilingAbove)
-        {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce * 1.1f);
-            stuckTimer += Time.deltaTime;
-            if (stuckTimer > 0.5f)
-            {
-                isAlternativeRouteActive = true;
-                alternativeRouteTimer = 0.8f;
-                altDirection = -currentMoveDir;
-                stuckTimer = 0;
-            }
-        }
-        else { stuckTimer = 0; }
-
-        if (isAlternativeRouteActive)
-        {
-            finalMoveDir = altDirection;
-            alternativeRouteTimer -= Time.deltaTime;
-            if (alternativeRouteTimer <= 0) isAlternativeRouteActive = false;
-        }
-
-        // 5. MIȘCAREA EFECTIVĂ
-        rb.linearVelocity = new Vector2(finalMoveDir * moveSpeed, rb.linearVelocity.y);
-        animator.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
-
-        if ((finalMoveDir > 0 && !isFacingRight) || (finalMoveDir < 0 && isFacingRight))
-        {
+        if ((direction > 0 && !isFacingRight) || (direction < 0 && isFacingRight))
             Flip();
-        }
     }
 
-    void StopBoss()
+    void StopMovement()
     {
         rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-        animator.SetFloat("Speed", 0f);
+        if (animator != null)
+            animator.SetFloat("Speed", 0f);
     }
 
-    void TryAttack()
+    void ExecuteAttack()
     {
-        if (Time.time < lastAttackTime + attackCooldown) return;
-        float dir = Mathf.Sign(player.position.x - transform.position.x);
-        if ((dir > 0 && !isFacingRight) || (dir < 0 && isFacingRight)) Flip();
+        lastAttackTime = Time.time;
+
+        // 1. Oprim orice altă viteză care ar putea forța trecerea la Run
+        animator.SetFloat("Speed", 0);
+        rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+
+        // 2. Declanșăm parametrii
         animator.SetInteger("RageLevel", rageLevel);
         animator.SetTrigger("Attack");
-        lastAttackTime = Time.time;
+
+        // 3. COMANDA SUPREMĂ: Dacă după trigger tot nu vrea, îi dăm "brânci"
+        // Folosim CrossFade pentru a trece instant în animație, ignorând orice săgeată
+        string animName = (rageLevel == 0) ? "FinalBoss_Attack3" :
+                          (rageLevel == 1) ? "FinalBoss_Attack1" : "FinalBoss_Attack2";
+
+        animator.CrossFadeInFixedTime(animName, 0.05f);
+
+        Debug.Log("Am forțat vizual atacul: " + animName);
+
+        // 4. Damage către Player
+        if (Vector2.Distance(transform.position, player.position) <= attackRange + 1f)
+        {
+            player.SendMessage("TakeDamage", 10, SendMessageOptions.DontRequireReceiver);
+        }
     }
 
-    void Flip() { isFacingRight = !isFacingRight; transform.Rotate(0, 180, 0); }
-
-    public void TakeHit()
+    public void TakeDamage(float damage)
     {
-        animator.SetTrigger("Hurt");
-        rageLevel = Mathf.Clamp(rageLevel + 1, 0, 2);
-        lastAttackTime = Time.time + 0.5f;
+        if (isDead) return;
+
+        currentHealth -= damage;
+        if (animator != null) animator.SetTrigger("Hurt");
+
+        // Schimbare stadii în funcție de viață
+        if (currentHealth <= rage1Threshold && rageLevel == 0) ActivateRage1();
+        else if (currentHealth <= rage2Threshold && rageLevel == 1) ActivateRage2();
+
+        if (currentHealth <= 0) StartCoroutine(DieSequence());
     }
 
-    public void Die()
+    void ActivateRage1()
     {
-        animator.SetTrigger("Dead");
-        rb.linearVelocity = Vector2.zero;
-        rb.simulated = false;
-        this.enabled = false;
+        rageLevel = 1;
+        moveSpeed += 2f;
+        transform.localScale *= 1.05f;
+        if (spriteRenderer != null) spriteRenderer.color = new Color(1f, 0.4f, 0.4f);
+        if (rageSound != null) rageSound.Play();
+        animator.SetInteger("RageLevel", 1);
+    }
+
+    void ActivateRage2()
+    {
+        rageLevel = 2;
+        moveSpeed += 1.5f;
+        transform.localScale *= 1.1f;
+        if (spriteRenderer != null) spriteRenderer.color = Color.red;
+        if (rageSound != null) rageSound.Play();
+        animator.SetInteger("RageLevel", 2);
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("MovingPlatform"))
-            transform.SetParent(collision.transform, true);
+        // Detectare glonț (Colliderul glonțului trebuie să aibă scriptul bulletScript)
+        if (collision.collider.GetComponent<bulletScript>() != null)
+        {
+            TakeDamage(10f);
+            Destroy(collision.gameObject);
+        }
     }
 
-    private void OnCollisionExit2D(Collision2D collision)
+    void Flip()
     {
-        if (collision.gameObject.CompareTag("MovingPlatform") && gameObject.activeInHierarchy)
-            transform.parent = null;
+        isFacingRight = !isFacingRight;
+        transform.Rotate(0, 180, 0);
+    }
+
+    IEnumerator DieSequence()
+    {
+        isDead = true;
+        rb.linearVelocity = Vector2.zero;
+        rb.simulated = false; // Îl scoatem din fizică
+
+        if (animator != null)
+        {
+            animator.SetTrigger("Dead");
+            // Forțăm animația Dead în caz că Any State o blochează
+            animator.Play("FinalBoss_Dead", 0, 0f);
+        }
+
+        yield return new WaitForSeconds(2.5f);
+        Destroy(gameObject);
     }
 }
