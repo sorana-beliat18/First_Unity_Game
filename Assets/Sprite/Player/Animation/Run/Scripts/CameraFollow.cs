@@ -16,4 +16,5 @@ public class cameraFollow : MonoBehaviour
         Vector3 newPos = new Vector3(target.position.x, target.position.y, -10);//coordonatele caracterului
         transform.position = Vector3.Slerp(transform.position, newPos, FollowSpeed * Time.fixedDeltaTime);
     }
+    
 }

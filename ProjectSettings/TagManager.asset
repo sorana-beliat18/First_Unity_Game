@@ -4,13 +4,13 @@
 TagManager:
   serializedVersion: 3
   tags:
-  - Boss
-  - MovingPlatform
+  - Enemy
+  - StartPoint
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - Ground
+  - 
   - Water
   - UI
   - 
@@ -42,15 +42,6 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
-    locked: 0
-  - name: Background
-    uniqueID: 3586831635
-    locked: 0
-  - name: Tiles
-    uniqueID: 4208563533
-    locked: 0
-  - name: Characters
-    uniqueID: 1551550687
     locked: 0
   m_RenderingLayers:
   - Default
