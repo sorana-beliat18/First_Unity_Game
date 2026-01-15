@@ -22,8 +22,15 @@ public class BossController : MonoBehaviour
     public float moveSpeed = 4f;
     private bool isFacingRight = true;
 
+    [Header("Jumping Logic")]
+    public float jumpForce = 12f;
+    public Transform groundCheck;   // Obiect gol pus la picioarele boss-ului
+    public LayerMask groundLayer;   // Stratul "Ground" pentru platforme
+    private bool isGrounded;
+    public float jumpHeightThreshold = 2.5f; // Cât de sus trebuie să fie playerul ca boss-ul să sară
+
     [Header("Combat Settings")]
-    public float attackRange = 4.0f; // Ajustat pentru a preveni împingerea
+    public float attackRange = 4.0f;
     public float attackCooldown = 2.0f;
     private float lastAttackTime = -999f;
 
@@ -37,7 +44,6 @@ public class BossController : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         currentHealth = maxHealth;
 
-        // Căutăm automat jucătorul dacă nu este pus în Inspector
         if (player == null)
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
     }
@@ -46,7 +52,9 @@ public class BossController : MonoBehaviour
     {
         if (!player || isDead) return;
 
-        // Efectul de tremurat pentru ultimul stadiu (Rage 2)
+        // Verificăm dacă boss-ul atinge pământul
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
+
         if (rageLevel == 2)
         {
             transform.localPosition += (Vector3)Random.insideUnitCircle * shakeIntensity;
@@ -54,7 +62,6 @@ public class BossController : MonoBehaviour
 
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
 
-        // LOGICĂ: Dacă e aproape, atacă. Dacă e departe, merge spre el.
         if (distanceToPlayer <= attackRange)
         {
             StopMovement();
@@ -67,6 +74,10 @@ public class BossController : MonoBehaviour
         {
             MoveTowardsPlayer();
         }
+
+        // Sincronizăm starea de pământ cu animatorul (dacă ai parametrul IsGrounded)
+        if (animator != null)
+            animator.SetBool("IsGrounded", isGrounded);
     }
 
     void MoveTowardsPlayer()
@@ -74,11 +85,26 @@ public class BossController : MonoBehaviour
         float direction = (player.position.x > transform.position.x) ? 1f : -1f;
         rb.linearVelocity = new Vector2(direction * moveSpeed, rb.linearVelocity.y);
 
+        // LOGICĂ SĂRITURĂ: Sare dacă e pe pământ și jucătorul e mai sus decât pragul setat
+        if (isGrounded && player.position.y > transform.position.y + jumpHeightThreshold)
+        {
+            Jump();
+        }
+
         if (animator != null)
             animator.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
 
         if ((direction > 0 && !isFacingRight) || (direction < 0 && isFacingRight))
             Flip();
+    }
+
+    void Jump()
+    {
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+        if (animator != null)
+        {
+            animator.SetTrigger("Jump"); // Activează animația FinalBoss_Jump
+        }
     }
 
     void StopMovement()
@@ -90,30 +116,22 @@ public class BossController : MonoBehaviour
 
     void ExecuteAttack()
     {
+        if (isDead) return;
         lastAttackTime = Time.time;
 
-        // 1. Oprim orice altă viteză care ar putea forța trecerea la Run
-        animator.SetFloat("Speed", 0);
-        rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+        StopMovement();
 
-        // 2. Declanșăm parametrii
-        animator.SetInteger("RageLevel", rageLevel);
+        animator.ResetTrigger("Attack");
         animator.SetTrigger("Attack");
+        animator.SetInteger("RageLevel", rageLevel);
 
-        // 3. COMANDA SUPREMĂ: Dacă după trigger tot nu vrea, îi dăm "brânci"
-        // Folosim CrossFade pentru a trece instant în animație, ignorând orice săgeată
         string animName = (rageLevel == 0) ? "FinalBoss_Attack3" :
                           (rageLevel == 1) ? "FinalBoss_Attack1" : "FinalBoss_Attack2";
 
-        animator.CrossFadeInFixedTime(animName, 0.05f);
+        animator.CrossFadeInFixedTime(animName, 0.1f);
 
-        Debug.Log("Am forțat vizual atacul: " + animName);
-
-        // 4. Damage către Player
-        if (Vector2.Distance(transform.position, player.position) <= attackRange + 1f)
-        {
-            player.SendMessage("TakeDamage", 10, SendMessageOptions.DontRequireReceiver);
-        }
+        // Trimitere damage către player (ajustat la 1 pentru cele 3 vieți)
+        player.SendMessage("TakeDamage", 1, SendMessageOptions.DontRequireReceiver);
     }
 
     public void TakeDamage(float damage)
@@ -123,7 +141,6 @@ public class BossController : MonoBehaviour
         currentHealth -= damage;
         if (animator != null) animator.SetTrigger("Hurt");
 
-        // Schimbare stadii în funcție de viață
         if (currentHealth <= rage1Threshold && rageLevel == 0) ActivateRage1();
         else if (currentHealth <= rage2Threshold && rageLevel == 1) ActivateRage2();
 
@@ -134,6 +151,7 @@ public class BossController : MonoBehaviour
     {
         rageLevel = 1;
         moveSpeed += 2f;
+        jumpForce += 2f; // Sare mai sus în rage
         transform.localScale *= 1.05f;
         if (spriteRenderer != null) spriteRenderer.color = new Color(1f, 0.4f, 0.4f);
         if (rageSound != null) rageSound.Play();
@@ -144,6 +162,7 @@ public class BossController : MonoBehaviour
     {
         rageLevel = 2;
         moveSpeed += 1.5f;
+        jumpForce += 2f;
         transform.localScale *= 1.1f;
         if (spriteRenderer != null) spriteRenderer.color = Color.red;
         if (rageSound != null) rageSound.Play();
@@ -152,7 +171,6 @@ public class BossController : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        // Detectare glonț (Colliderul glonțului trebuie să aibă scriptul bulletScript)
         if (collision.collider.GetComponent<bulletScript>() != null)
         {
             TakeDamage(10f);
@@ -170,12 +188,11 @@ public class BossController : MonoBehaviour
     {
         isDead = true;
         rb.linearVelocity = Vector2.zero;
-        rb.simulated = false; // Îl scoatem din fizică
+        rb.simulated = false;
 
         if (animator != null)
         {
             animator.SetTrigger("Dead");
-            // Forțăm animația Dead în caz că Any State o blochează
             animator.Play("FinalBoss_Dead", 0, 0f);
         }
 
