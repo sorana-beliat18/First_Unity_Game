@@ -139,7 +139,14 @@ public class BossController : MonoBehaviour
         if (isDead) return;
 
         currentHealth -= damage;
-        if (animator != null) animator.SetTrigger("Hurt");
+        if (currentHealth < maxHealth / 2)
+        {
+            animator.SetTrigger("Protect");
+        }
+        else
+        {
+            animator.SetTrigger("Hurt");
+        }
 
         if (currentHealth <= rage1Threshold && rageLevel == 0) ActivateRage1();
         else if (currentHealth <= rage2Threshold && rageLevel == 1) ActivateRage2();
