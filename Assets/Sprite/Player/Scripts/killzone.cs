@@ -8,19 +8,10 @@ public class killzone : MonoBehaviour
     {
         if (!other.CompareTag("Player")) return;
 
-        Vector3 respawn;
-
-        if (Checkpoint.reached)
-            respawn = Checkpoint.respawnPoint;
-        else
-            respawn = startPoint.position;
-
-        other.transform.position = respawn;
-
         PlayerHealth health = other.GetComponent<PlayerHealth>();
         if (health != null)
         {
-            health.ResetHealth();
+            health.TakeDamage(health.currentLives); // omoară playerul
         }
     }
 }

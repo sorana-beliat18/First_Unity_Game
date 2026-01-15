@@ -12,7 +12,9 @@ public class Star : MonoBehaviour
                 pc.AddStar();
             }
 
-            Destroy(gameObject);
+            //Destroy(gameObject);
+            gameObject.SetActive(false);
+
         }
     }
 }
