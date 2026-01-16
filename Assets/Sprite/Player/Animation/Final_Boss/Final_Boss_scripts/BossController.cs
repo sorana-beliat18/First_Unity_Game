@@ -8,6 +8,7 @@ public class BossController : MonoBehaviour
     public Rigidbody2D rb;
     public Animator animator;
     public AudioSource rageSound;
+    public GameObject swordDrop; // Trage aici obiectul sabiei din Hierarchy
     private SpriteRenderer spriteRenderer;
 
     [Header("Health & Stages")]
@@ -46,6 +47,10 @@ public class BossController : MonoBehaviour
 
         if (player == null)
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
+
+        // Ne asigurăm că sabia este ascunsă la începutul jocului
+        if (swordDrop != null)
+            swordDrop.SetActive(false);
     }
 
     void Update()
@@ -75,7 +80,7 @@ public class BossController : MonoBehaviour
             MoveTowardsPlayer();
         }
 
-        // Sincronizăm starea de pământ cu animatorul (dacă ai parametrul IsGrounded)
+        // Sincronizăm starea de pământ cu animatorul
         if (animator != null)
             animator.SetBool("IsGrounded", isGrounded);
     }
@@ -85,7 +90,7 @@ public class BossController : MonoBehaviour
         float direction = (player.position.x > transform.position.x) ? 1f : -1f;
         rb.linearVelocity = new Vector2(direction * moveSpeed, rb.linearVelocity.y);
 
-        // LOGICĂ SĂRITURĂ: Sare dacă e pe pământ și jucătorul e mai sus decât pragul setat
+        // LOGICĂ SĂRITURĂ: Sare dacă e pe pământ și jucătorul e mai sus
         if (isGrounded && player.position.y > transform.position.y + jumpHeightThreshold)
         {
             Jump();
@@ -130,7 +135,7 @@ public class BossController : MonoBehaviour
 
         animator.CrossFadeInFixedTime(animName, 0.1f);
 
-        // Trimitere damage către player (ajustat la 1 pentru cele 3 vieți)
+        // Trimitere damage către player
         player.SendMessage("TakeDamage", 1, SendMessageOptions.DontRequireReceiver);
     }
 
@@ -139,6 +144,8 @@ public class BossController : MonoBehaviour
         if (isDead) return;
 
         currentHealth -= damage;
+
+        // Logică protecție sau hit
         if (currentHealth < maxHealth / 2)
         {
             animator.SetTrigger("Protect");
@@ -158,7 +165,7 @@ public class BossController : MonoBehaviour
     {
         rageLevel = 1;
         moveSpeed += 2f;
-        jumpForce += 2f; // Sare mai sus în rage
+        jumpForce += 2f;
         transform.localScale *= 1.05f;
         if (spriteRenderer != null) spriteRenderer.color = new Color(1f, 0.4f, 0.4f);
         if (rageSound != null) rageSound.Play();
@@ -203,7 +210,17 @@ public class BossController : MonoBehaviour
             animator.Play("FinalBoss_Dead", 0, 0f);
         }
 
-        yield return new WaitForSeconds(2.5f);
+        // ACTIVAREA SABIEI
+        if (swordDrop != null)
+        {
+            // Mutăm sabia exact unde a murit Boss-ul
+            swordDrop.transform.position = transform.position;
+            // O activăm (o facem vizibilă)
+            swordDrop.SetActive(true);
+        }
+
+        // Așteptăm 1 secundă pentru a vedea animația de moarte
+        yield return new WaitForSeconds(1.0f);
         Destroy(gameObject);
     }
 }
