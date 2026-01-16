@@ -11,9 +11,12 @@ public class PlayerHealth : MonoBehaviour
     // SHIELD
     public bool isInvincible = false;
     public float shieldOpacity = 0.5f;
-    public GameObject shieldVisual; // optional
+    public GameObject shieldVisual;
 
     private SpriteRenderer spriteRenderer;
+
+    // TOATE shield-urile din nivel
+    private ShieldPower[] shields;
 
     void Start()
     {
@@ -24,6 +27,9 @@ public class PlayerHealth : MonoBehaviour
 
         if (shieldVisual != null)
             shieldVisual.SetActive(false);
+
+        // gasim toate shield-urile (inclusiv inactive)
+        shields = FindObjectsOfType<ShieldPower>(true);
     }
 
     // APELAT DE INAMICI / CAPCANE
@@ -41,6 +47,10 @@ public class PlayerHealth : MonoBehaviour
             Die();
         }
     }
+    public void KillInstant()
+{
+    Die();
+}
 
     // ☠️ MOARTE + RESPAWN
     void Die()
@@ -78,6 +88,7 @@ public class PlayerHealth : MonoBehaviour
 
         RespawnStars();
         RespawnPowerUps();
+        RespawnShields();   // 🔥 ASTA LIPSEA
     }
 
     // ⭐ RESPAWN STARS
@@ -103,16 +114,14 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
-    // ⚡ POWER-UP RESPAWN DUPĂ TIMP
-    public void RespawnPowerUpAfterTime(DoubleJumpPowerUp powerUp, float time)
+    // 🛡️ RESPAWN SHIELDS LA MOARTE
+    void RespawnShields()
     {
-        StartCoroutine(RespawnPowerUpCoroutine(powerUp, time));
-    }
-
-    IEnumerator RespawnPowerUpCoroutine(DoubleJumpPowerUp powerUp, float time)
-    {
-        yield return new WaitForSeconds(time);
-        powerUp.Respawn();
+        foreach (ShieldPower s in shields)
+        {
+            if (s != null)
+                s.gameObject.SetActive(true);
+        }
     }
 
     // 🛡️ SHIELD / INVINCIBILITATE + OPACITATE
