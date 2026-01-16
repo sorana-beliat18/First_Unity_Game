@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections;
 
 [RequireComponent(typeof(AudioSource))]
@@ -7,10 +7,10 @@ public class PlaySoundOnEnable : MonoBehaviour
     private AudioSource a;
 
     [Header("Sound Settings")]
-    [Tooltip("Cât timp se aude sunetul înainte sã înceapã fade-out")]
-    public float playTime = 1.4f;
+    [Tooltip("CÃ¢t timp se aude sunetul Ã®nainte sÄƒ Ã®nceapÄƒ fade-out")]
+    public float playTime = 4.0f;
 
-    [Tooltip("Cât dureazã fade-out-ul")]
+    [Tooltip("CÃ¢t dureazÄƒ fade-out-ul")]
     public float fadeDuration = 0.3f;
 
     private float startVolume;

@@ -66,4 +66,21 @@ public class PuzzleInventoryUI : MonoBehaviour
         Debug.Log("Inventar plin!");
         return -1;
     }
+    public bool IsFull()
+    {
+        for (int i = 0; i < slots.Length; i++)
+            if (slots[i].sprite == null)
+                return false;
+
+        return true;
+    }
+
+    public int FilledCount()
+    {
+        int c = 0;
+        for (int i = 0; i < slots.Length; i++)
+            if (slots[i].sprite != null) c++;
+        return c;
+    }
+
 }
