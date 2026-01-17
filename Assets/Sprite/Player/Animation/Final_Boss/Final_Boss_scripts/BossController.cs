@@ -8,7 +8,7 @@ public class BossController : MonoBehaviour
     public Rigidbody2D rb;
     public Animator animator;
     public AudioSource rageSound;
-    public GameObject swordDrop; // Trage aici obiectul sabiei din Hierarchy
+    public GameObject swordDrop; // Obiectul tău "gri" din hierarchy
     private SpriteRenderer spriteRenderer;
 
     [Header("Health & Stages")]
@@ -25,10 +25,15 @@ public class BossController : MonoBehaviour
 
     [Header("Jumping Logic")]
     public float jumpForce = 12f;
-    public Transform groundCheck;   // Obiect gol pus la picioarele boss-ului
-    public LayerMask groundLayer;   // Stratul "Ground" pentru platforme
+    public Transform groundCheck;
+    public LayerMask groundLayer;
     private bool isGrounded;
-    public float jumpHeightThreshold = 2.5f; // Cât de sus trebuie să fie playerul ca boss-ul să sară
+    public float jumpHeightThreshold = 2.5f;
+
+    [Header("Advanced AI")]
+    public float wallCheckDistance = 1.5f;
+    public Transform ledgeCheck;
+    public float ceilingCheckDistance = 3.0f;
 
     [Header("Combat Settings")]
     public float attackRange = 4.0f;
@@ -48,7 +53,7 @@ public class BossController : MonoBehaviour
         if (player == null)
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
 
-        // Ne asigurăm că sabia este ascunsă la începutul jocului
+        // Ne asigurăm că sabia este dezactivată la început
         if (swordDrop != null)
             swordDrop.SetActive(false);
     }
@@ -57,8 +62,23 @@ public class BossController : MonoBehaviour
     {
         if (!player || isDead) return;
 
-        // Verificăm dacă boss-ul atinge pământul
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
+        // Pasul 1: Detecție mai mare (0.5f) pentru a evita blocarea animației
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.5f, groundLayer);
+
+        // Resetarea trigger-ului și forțarea revenirii din Jump dacă e pe sol
+        if (isGrounded && rb.linearVelocity.y <= 0.1f)
+        {
+            animator.ResetTrigger("Jump");
+
+            // Forțăm revenirea la Idle/Walk dacă a rămas blocat în ultimul cadru de Jump
+            if (animator.GetCurrentAnimatorStateInfo(0).IsName("FinalBoss_Jump"))
+            {
+                if (Mathf.Abs(rb.linearVelocity.x) > 0.1f)
+                    animator.Play("FinalBoss_Walk");
+                else
+                    animator.Play("FinalBoss_Idle");
+            }
+        }
 
         if (rageLevel == 2)
         {
@@ -80,9 +100,11 @@ public class BossController : MonoBehaviour
             MoveTowardsPlayer();
         }
 
-        // Sincronizăm starea de pământ cu animatorul
         if (animator != null)
             animator.SetBool("IsGrounded", isGrounded);
+
+        Debug.DrawRay(transform.position, isFacingRight ? Vector2.right * wallCheckDistance : Vector2.left * wallCheckDistance, Color.red);
+        Debug.DrawRay(transform.position, Vector2.up * ceilingCheckDistance, Color.blue);
     }
 
     void MoveTowardsPlayer()
@@ -90,10 +112,20 @@ public class BossController : MonoBehaviour
         float direction = (player.position.x > transform.position.x) ? 1f : -1f;
         rb.linearVelocity = new Vector2(direction * moveSpeed, rb.linearVelocity.y);
 
-        // LOGICĂ SĂRITURĂ: Sare dacă e pe pământ și jucătorul e mai sus
-        if (isGrounded && player.position.y > transform.position.y + jumpHeightThreshold)
+        Vector2 rayDir = isFacingRight ? Vector2.right : Vector2.left;
+        RaycastHit2D wallCheck = Physics2D.Raycast(transform.position, rayDir, wallCheckDistance, groundLayer);
+
+        bool isLedgeAhead = !Physics2D.OverlapCircle(ledgeCheck.position, 0.2f, groundLayer);
+
+        RaycastHit2D ceilingCheck = Physics2D.Raycast(transform.position, Vector2.up, ceilingCheckDistance, groundLayer);
+        bool isPathClearAbove = (ceilingCheck.collider == null);
+
+        if (isGrounded && isPathClearAbove)
         {
-            Jump();
+            if ((player.position.y > transform.position.y + jumpHeightThreshold) || (wallCheck.collider != null) || isLedgeAhead)
+            {
+                Jump();
+            }
         }
 
         if (animator != null)
@@ -107,9 +139,7 @@ public class BossController : MonoBehaviour
     {
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         if (animator != null)
-        {
-            animator.SetTrigger("Jump"); // Activează animația FinalBoss_Jump
-        }
+            animator.SetTrigger("Jump");
     }
 
     void StopMovement()
@@ -123,10 +153,7 @@ public class BossController : MonoBehaviour
     {
         if (isDead) return;
         lastAttackTime = Time.time;
-
         StopMovement();
-
-        animator.ResetTrigger("Attack");
         animator.SetTrigger("Attack");
         animator.SetInteger("RageLevel", rageLevel);
 
@@ -134,30 +161,18 @@ public class BossController : MonoBehaviour
                           (rageLevel == 1) ? "FinalBoss_Attack1" : "FinalBoss_Attack2";
 
         animator.CrossFadeInFixedTime(animName, 0.1f);
-
-        // Trimitere damage către player
         player.SendMessage("TakeDamage", 1, SendMessageOptions.DontRequireReceiver);
     }
 
     public void TakeDamage(float damage)
     {
         if (isDead) return;
-
         currentHealth -= damage;
-
-        // Logică protecție sau hit
-        if (currentHealth < maxHealth / 2)
-        {
-            animator.SetTrigger("Protect");
-        }
-        else
-        {
-            animator.SetTrigger("Hurt");
-        }
+        if (currentHealth < maxHealth / 2) animator.SetTrigger("Protect");
+        else animator.SetTrigger("Hurt");
 
         if (currentHealth <= rage1Threshold && rageLevel == 0) ActivateRage1();
         else if (currentHealth <= rage2Threshold && rageLevel == 1) ActivateRage2();
-
         if (currentHealth <= 0) StartCoroutine(DieSequence());
     }
 
@@ -201,26 +216,76 @@ public class BossController : MonoBehaviour
     IEnumerator DieSequence()
     {
         isDead = true;
+
+        // Oprim fizica imediat ca să nu mai alunece sau să sară
         rb.linearVelocity = Vector2.zero;
-        rb.simulated = false;
+        rb.bodyType = RigidbodyType2D.Kinematic;
+        GetComponent<Collider2D>().enabled = false;
 
         if (animator != null)
         {
-            animator.SetTrigger("Dead");
-            animator.Play("FinalBoss_Dead", 0, 0f);
+            // Dezactivăm Any State prin oprirea Animatorului după ce pornește animația
+            animator.Play("FinalBoss_Dead");
         }
 
-        // ACTIVAREA SABIEI
+        // Activăm sabia
         if (swordDrop != null)
         {
-            // Mutăm sabia exact unde a murit Boss-ul
-            swordDrop.transform.position = transform.position;
-            // O activăm (o facem vizibilă)
             swordDrop.SetActive(true);
+            swordDrop.transform.position = transform.position;
+
+            // IMPORTANT: Dacă tot nu se vede, forțăm SpriteRenderer-ul să fie în față
+            SpriteRenderer swordSR = swordDrop.GetComponent<SpriteRenderer>();
+            if (swordSR != null)
+            {
+                swordSR.sortingOrder = 10; // Îl pune deasupra restului hărții
+            }
         }
 
-        // Așteptăm 1 secundă pentru a vedea animația de moarte
+        // Așteptăm 1 secundă să se vadă animația de moarte
         yield return new WaitForSeconds(1.0f);
+
+        // Boss-ul dispare brusc
         Destroy(gameObject);
+    }
+
+    private float lastJumpTime = 0f;
+    public float jumpCooldown = 0.5f;
+
+    private void OnTriggerStay2D(Collider2D other)
+    {
+        if (other.CompareTag("JumpPoint"))
+        {
+            if (Time.time > lastJumpTime + jumpCooldown)
+            {
+                if (player.position.y > transform.position.y + 1.0f)
+                {
+                    JumpPointConfig config = other.GetComponent<JumpPointConfig>();
+
+                    if (config != null)
+                    {
+                        // Săritură cu forță personalizată din JumpNode
+                        rb.linearVelocity = new Vector2(rb.linearVelocity.x, config.customJumpForce);
+                        animator.SetTrigger("Jump");
+                        lastJumpTime = Time.time;
+                    }
+                    else
+                    {
+                        Jump();
+                        lastJumpTime = Time.time;
+                    }
+                }
+            }
+        }
+    }
+
+    // Vizualizăm raza de detecție a solului în Editor
+    private void OnDrawGizmosSelected()
+    {
+        if (groundCheck != null)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(groundCheck.position, 0.5f);
+        }
     }
 }
