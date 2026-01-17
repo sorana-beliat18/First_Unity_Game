@@ -11,7 +11,7 @@ public class PatrolEnemyDamage : MonoBehaviour
     {
         if (!collision.gameObject.CompareTag("Player")) return;
 
-        // cooldown – să nu scadă toate viețile instant
+        
         if (Time.time - lastDamageTime < damageCooldown) return;
 
         PlayerHealth playerHealth =

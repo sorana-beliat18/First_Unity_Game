@@ -11,7 +11,7 @@ public class EnemyDamage : MonoBehaviour
     {
         if (!collision.gameObject.CompareTag("Player")) return;
 
-        // prevenim damage continuu
+        
         if (Time.time - lastHitTime < damageCooldown) return;
 
         PlayerHealth playerHealth =
