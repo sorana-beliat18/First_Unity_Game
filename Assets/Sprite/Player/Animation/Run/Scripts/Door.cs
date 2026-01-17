@@ -21,7 +21,7 @@ public class Door : MonoBehaviour
         if (isOpen) return;
 
         isOpen = true;
-        anim.SetTrigger("Open");
+        anim.SetTrigger("door_opening1");
 
         if (audioSource != null && openSound != null)
         {

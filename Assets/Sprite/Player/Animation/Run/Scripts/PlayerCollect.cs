@@ -6,7 +6,9 @@ public class PlayerCollect : MonoBehaviour
     public int maxStars = 10;
     public StarUI starUI;
 
-    public Door door; // 👈 REFERINȚĂ CĂTRE UȘĂ
+    public static int starsAtCheckpoint = 0;
+
+    public Door door;
 
     void Start()
     {
@@ -21,7 +23,17 @@ public class PlayerCollect : MonoBehaviour
         if (stars >= maxStars)
         {
             Debug.Log("AI STRÂNS TOATE STELUȚELE!");
-            door.OpenDoor(); // 🔥 DESCHIDE UȘA
+            door.OpenDoor(); 
         }
     }
+
+
+    public void RestoreStarsFromCheckpoint()
+{
+    stars = starsAtCheckpoint;
+    starUI.UpdateStars(stars);
+}
+
+
+    
 }

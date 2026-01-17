@@ -1,48 +1,67 @@
 using UnityEngine;
+using System.Collections;
 
 public class DoubleJumpPowerUp : MonoBehaviour
 {
-    public int bonusJumps = 1;
-    public float duration = 10f;
+    public float duration = 10f;      // cat timp dureaza double jump-ul
+    public int jumps = 1;              // cate sarituri extra
+    public float respawnTime = 30f;    // dupa cate secunde reapare
 
-    private Vector3 startPosition;
-    private bool isScheduledForRespawn = false;
+    private Collider2D col;
+    private SpriteRenderer sr;
 
-    void Start()
+    private Coroutine respawnRoutine;
+
+    void Awake()
     {
-        startPosition = transform.position;
+        col = GetComponent<Collider2D>();
+        sr = GetComponent<SpriteRenderer>();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!other.CompareTag("Player")) return;
+        if (!other.CompareTag("Player"))
+            return;
 
         CharacterController2D controller =
             other.GetComponent<CharacterController2D>();
 
-        PlayerHealth health =
-            other.GetComponent<PlayerHealth>();
-
-        if (controller != null && health != null && !isScheduledForRespawn)
+        if (controller != null)
         {
-            Collect(controller);
-            isScheduledForRespawn = true;
-
-            // player-ul pornește timer-ul
-            health.RespawnPowerUpAfterTime(this, 15f);
+            controller.EnableDoubleJumpForSeconds(duration, jumps);
         }
+
+        Hide();
+
+        // pornește respawn-ul pe timer
+        if (respawnRoutine != null)
+            StopCoroutine(respawnRoutine);
+
+        respawnRoutine = StartCoroutine(RespawnAfterTime());
     }
 
-    public void Collect(CharacterController2D controller)
+    IEnumerator RespawnAfterTime()
     {
-        controller.EnableDoubleJumpForSeconds(duration, bonusJumps);
-        gameObject.SetActive(false);
+        yield return new WaitForSeconds(respawnTime);
+        Respawn();
     }
 
+    // 🔥 APELAT DE PlayerHealth LA MOARTE
     public void Respawn()
     {
-        isScheduledForRespawn = false;
-        transform.position = startPosition;
-        gameObject.SetActive(true);
+        if (respawnRoutine != null)
+        {
+            StopCoroutine(respawnRoutine);
+            respawnRoutine = null;
+        }
+
+        col.enabled = true;
+        sr.enabled = true;
+    }
+
+    private void Hide()
+    {
+        col.enabled = false;
+        sr.enabled = false;
     }
 }
