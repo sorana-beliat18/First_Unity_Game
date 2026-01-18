@@ -8,8 +8,12 @@ public class BossController : MonoBehaviour
     public Rigidbody2D rb;
     public Animator animator;
     public AudioSource rageSound;
-    public GameObject swordDrop; // Obiectul tău "gri" din hierarchy
+    public GameObject swordDrop;
     private SpriteRenderer spriteRenderer;
+
+    [Header("Activation Settings")]
+    public bool needsActivation = false; // Bifează DOAR pentru FireWizard
+    private bool isActuallyActive = true;
 
     [Header("Health & Stages")]
     public float maxHealth = 100f;
@@ -53,24 +57,36 @@ public class BossController : MonoBehaviour
         if (player == null)
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
 
-        // Ne asigurăm că sabia este dezactivată la început
         if (swordDrop != null)
             swordDrop.SetActive(false);
+
+        // Dacă are nevoie de activare, pornește "adormit"
+        if (needsActivation)
+        {
+            isActuallyActive = false;
+        }
+    }
+
+    // Funcție publică ce va fi apelată de Trigger-ul de activare
+    public void SetActivated(bool state)
+    {
+        isActuallyActive = state;
     }
 
     void Update()
     {
-        if (!player || isDead) return;
+        // Dacă nu este activat sau e mort, nu face nimic
+        if (!isActuallyActive || !player || isDead)
+        {
+            if (!isDead) StopMovement(); // Se asigură că stă în Idle
+            return;
+        }
 
-        // Pasul 1: Detecție mai mare (0.5f) pentru a evita blocarea animației
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.5f, groundLayer);
 
-        // Resetarea trigger-ului și forțarea revenirii din Jump dacă e pe sol
         if (isGrounded && rb.linearVelocity.y <= 0.1f)
         {
             animator.ResetTrigger("Jump");
-
-            // Forțăm revenirea la Idle/Walk dacă a rămas blocat în ultimul cadru de Jump
             if (animator.GetCurrentAnimatorStateInfo(0).IsName("FinalBoss_Jump"))
             {
                 if (Mathf.Abs(rb.linearVelocity.x) > 0.1f)
@@ -104,7 +120,6 @@ public class BossController : MonoBehaviour
             animator.SetBool("IsGrounded", isGrounded);
 
         Debug.DrawRay(transform.position, isFacingRight ? Vector2.right * wallCheckDistance : Vector2.left * wallCheckDistance, Color.red);
-        Debug.DrawRay(transform.position, Vector2.up * ceilingCheckDistance, Color.blue);
     }
 
     void MoveTowardsPlayer()
@@ -114,9 +129,7 @@ public class BossController : MonoBehaviour
 
         Vector2 rayDir = isFacingRight ? Vector2.right : Vector2.left;
         RaycastHit2D wallCheck = Physics2D.Raycast(transform.position, rayDir, wallCheckDistance, groundLayer);
-
         bool isLedgeAhead = !Physics2D.OverlapCircle(ledgeCheck.position, 0.2f, groundLayer);
-
         RaycastHit2D ceilingCheck = Physics2D.Raycast(transform.position, Vector2.up, ceilingCheckDistance, groundLayer);
         bool isPathClearAbove = (ceilingCheck.collider == null);
 
@@ -157,6 +170,7 @@ public class BossController : MonoBehaviour
         animator.SetTrigger("Attack");
         animator.SetInteger("RageLevel", rageLevel);
 
+        // Override Controller-ul se va ocupa de maparea corectă a animațiilor
         string animName = (rageLevel == 0) ? "FinalBoss_Attack3" :
                           (rageLevel == 1) ? "FinalBoss_Attack1" : "FinalBoss_Attack2";
 
@@ -181,7 +195,7 @@ public class BossController : MonoBehaviour
         rageLevel = 1;
         moveSpeed += 2f;
         jumpForce += 2f;
-        transform.localScale *= 1.05f;
+        transform.localScale *= 1.01f;
         if (spriteRenderer != null) spriteRenderer.color = new Color(1f, 0.4f, 0.4f);
         if (rageSound != null) rageSound.Play();
         animator.SetInteger("RageLevel", 1);
@@ -192,7 +206,7 @@ public class BossController : MonoBehaviour
         rageLevel = 2;
         moveSpeed += 1.5f;
         jumpForce += 2f;
-        transform.localScale *= 1.1f;
+        transform.localScale *= 1.02f;
         if (spriteRenderer != null) spriteRenderer.color = Color.red;
         if (rageSound != null) rageSound.Play();
         animator.SetInteger("RageLevel", 2);
@@ -216,36 +230,21 @@ public class BossController : MonoBehaviour
     IEnumerator DieSequence()
     {
         isDead = true;
-
-        // Oprim fizica imediat ca să nu mai alunece sau să sară
         rb.linearVelocity = Vector2.zero;
         rb.bodyType = RigidbodyType2D.Kinematic;
         GetComponent<Collider2D>().enabled = false;
 
-        if (animator != null)
-        {
-            // Dezactivăm Any State prin oprirea Animatorului după ce pornește animația
-            animator.Play("FinalBoss_Dead");
-        }
+        if (animator != null) animator.Play("FinalBoss_Dead");
 
-        // Activăm sabia
         if (swordDrop != null)
         {
             swordDrop.SetActive(true);
             swordDrop.transform.position = transform.position;
-
-            // IMPORTANT: Dacă tot nu se vede, forțăm SpriteRenderer-ul să fie în față
             SpriteRenderer swordSR = swordDrop.GetComponent<SpriteRenderer>();
-            if (swordSR != null)
-            {
-                swordSR.sortingOrder = 10; // Îl pune deasupra restului hărții
-            }
+            if (swordSR != null) swordSR.sortingOrder = 10;
         }
 
-        // Așteptăm 1 secundă să se vadă animația de moarte
         yield return new WaitForSeconds(1.0f);
-
-        // Boss-ul dispare brusc
         Destroy(gameObject);
     }
 
@@ -261,10 +260,8 @@ public class BossController : MonoBehaviour
                 if (player.position.y > transform.position.y + 1.0f)
                 {
                     JumpPointConfig config = other.GetComponent<JumpPointConfig>();
-
                     if (config != null)
                     {
-                        // Săritură cu forță personalizată din JumpNode
                         rb.linearVelocity = new Vector2(rb.linearVelocity.x, config.customJumpForce);
                         animator.SetTrigger("Jump");
                         lastJumpTime = Time.time;
@@ -279,7 +276,6 @@ public class BossController : MonoBehaviour
         }
     }
 
-    // Vizualizăm raza de detecție a solului în Editor
     private void OnDrawGizmosSelected()
     {
         if (groundCheck != null)
