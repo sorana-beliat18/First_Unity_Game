@@ -27645,7 +27645,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a6e02ab6aa5f3d47b801880b2675fa4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  bounceForce: 25
+  bounceForce: 30
 --- !u!58 &836994469
 CircleCollider2D:
   m_ObjectHideFlags: 0
