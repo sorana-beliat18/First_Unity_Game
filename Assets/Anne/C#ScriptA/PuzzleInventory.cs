@@ -21,13 +21,13 @@ public class PuzzleInventory : MonoBehaviour
 
     private void Start()
     {
-        // găsește UI-ul chiar dacă panelul este inactive
+      
         ui = FindObjectOfType<PuzzleInventoryUI>(true);
     }
 
     public void AddPiece(int id, Sprite sprite)
     {
-        // HashSet.Add returnează true doar dacă id-ul NU exista
+       
         if (collected.Add(id))
         {
             if (ui != null)

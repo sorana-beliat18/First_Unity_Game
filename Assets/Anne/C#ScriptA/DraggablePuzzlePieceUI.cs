@@ -39,10 +39,8 @@ public class DraggablePuzzlePieceUI : MonoBehaviour, IBeginDragHandler, IDragHan
 
         homeParent = parent;
 
-        // punem piesa în slot
         transform.SetParent(homeParent, false);
 
-        // poziție “centrată” în slot
         if (rt != null)
             rt.anchoredPosition = Vector2.zero;
 

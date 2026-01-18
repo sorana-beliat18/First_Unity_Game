@@ -10,10 +10,10 @@ public class PuzzleTraySlot : MonoBehaviour
 
     private void Awake()
     {
-        // 1) Găsim DoorPuzzleUI
+        
         doorUI = FindObjectOfType<DoorPuzzleUI>(true);
 
-        // 2) Găsim EXACT copilul "Icon" (nu orice Image)
+        
         if (img == null)
         {
             Transform iconTf = transform.Find("Icon");
@@ -21,7 +21,7 @@ public class PuzzleTraySlot : MonoBehaviour
                 img = iconTf.GetComponent<Image>();
         }
 
-        // fallback: dacă nu există copil "Icon", încearcă orice Image din copii
+       
         if (img == null)
             img = GetComponentInChildren<Image>(true);
 

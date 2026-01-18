@@ -8,8 +8,7 @@ public class PuzzleCounter : MonoBehaviour
     public int totalPieces = 9;
 
     [Header("Portal")]
-    public GameObject portalObject;  // tragi Portal-ul din Hierarchy aici (și îl lași inactive)
-
+    public GameObject portalObject;  
     private int collected = 0;
     private bool portalSpawned = false;
 
@@ -35,7 +34,7 @@ public class PuzzleCounter : MonoBehaviour
                 PickupMessageUI.Instance.Show($"Ai luat piesa {collected}/{totalPieces}");
         }
 
-        // ✅ când e complet, pornește portalul o singură dată
+       
         if (!portalSpawned && collected >= totalPieces)
         {
             portalSpawned = true;

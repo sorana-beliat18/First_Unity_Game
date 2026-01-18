@@ -18,7 +18,7 @@ public class PickupMessageUI : MonoBehaviour
         if (messageText == null)
             messageText = GetComponent<TMP_Text>() ?? GetComponentInChildren<TMP_Text>(true);
 
-        messageText.enabled = false; // ✅ ascunde textul fără să dezactiveze GameObject-ul
+        messageText.enabled = false; 
     }
 
     public void Show(string message)

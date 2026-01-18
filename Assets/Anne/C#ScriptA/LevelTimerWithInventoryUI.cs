@@ -60,7 +60,7 @@ public class LevelTimerWithInventoryUI : MonoBehaviour
         else
         {
             Debug.Log("Inventar full - nivel complet!");
-            // aici poți încărca next level dacă vrei
+          
         }
     }
 

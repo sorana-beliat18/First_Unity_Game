@@ -6,11 +6,10 @@ public class PlaySoundOnEnable : MonoBehaviour
 {
     private AudioSource a;
 
-    [Header("Sound Settings")]
-    [Tooltip("Cât timp se aude sunetul înainte să înceapă fade-out")]
+   
     public float playTime = 4.0f;
 
-    [Tooltip("Cât durează fade-out-ul")]
+   
     public float fadeDuration = 0.3f;
 
     private float startVolume;

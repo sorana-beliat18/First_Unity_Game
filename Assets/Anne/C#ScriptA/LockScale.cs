@@ -12,7 +12,7 @@ public class LockScale : MonoBehaviour
 
     private void Update()
     {
-        Apply(); // rulează și în editor, și în play
+        Apply();
     }
 
     private void Apply()

@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class PortalGlowPulse : MonoBehaviour
 {
-    [Header("Pulse")]
-    public float scaleAmount = 0.05f;   // cât “pulseazã”
-    public float speed = 2f;            // vitezã
+    
+    public float scaleAmount = 0.05f;   
+    public float speed = 2f;            
 
-    [Header("Alpha")]
+    
     public float minAlpha = 0.75f;
     public float maxAlpha = 1f;
 
@@ -21,7 +21,7 @@ public class PortalGlowPulse : MonoBehaviour
 
     private void Update()
     {
-        float t = (Mathf.Sin(Time.time * speed) + 1f) * 0.5f; // 0..1
+        float t = (Mathf.Sin(Time.time * speed) + 1f) * 0.5f;
 
         // scale pulse
         float s = 1f + Mathf.Lerp(-scaleAmount, scaleAmount, t);

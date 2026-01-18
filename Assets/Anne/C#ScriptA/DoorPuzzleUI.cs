@@ -5,25 +5,25 @@ using UnityEngine.SceneManagement;
 public class DoorPuzzleUI : MonoBehaviour
 {
     [Header("UI")]
-    public GameObject panelVisual;   // copilul vizual (ex: PanelVisual)
-    public Button closeButton;       // îl vom folosi ca NEXT
+    public GameObject panelVisual;   
+    public Button closeButton;       
 
     [Header("Board slots (mijloc)")]
-    public Image[] boardSlots;       // SlotID0..SlotID8 (imaginile de pe board)
+    public Image[] boardSlots;      
 
     [Header("Tray icons (stânga)")]
-    public Image[] trayIcons;        // Icon-urile din PiecesGrid: Slot0/Icon, Slot1/Icon, etc.
+    public Image[] trayIcons;        
 
     [Header("Next Scene")]
-    public string nextSceneName = "Level_2"; // <- pune Level_2
+    public string nextSceneName = "Level_2"; 
 
     private bool isOpen;
 
-    // selecție piesă din tray
+  
     private int selectedPieceIndex = -1;
     private Sprite selectedSprite = null;
 
-    // progres puzzle
+  
     private int correctPlacedCount = 0;
     private bool puzzleCompleted = false;
 
@@ -32,7 +32,7 @@ public class DoorPuzzleUI : MonoBehaviour
         if (panelVisual != null)
             panelVisual.SetActive(false);
 
-        // BUTONUL e ascuns la început
+      
         if (closeButton != null)
             closeButton.gameObject.SetActive(false);
 
@@ -41,7 +41,7 @@ public class DoorPuzzleUI : MonoBehaviour
 
     private void Update()
     {
-        // dacă nu mai avem buton de close, Escape poate închide UI
+        
         if (isOpen && Input.GetKeyDown(KeyCode.Escape))
             Close();
     }
@@ -57,12 +57,12 @@ public class DoorPuzzleUI : MonoBehaviour
         else
             Debug.LogWarning("panelVisual este NULL! Trage PanelVisual în Inspector.");
 
-        // reset puzzle state la fiecare open
+     
         ResetSelection();
         correctPlacedCount = 0;
         puzzleCompleted = false;
 
-        // ascundem butonul până la completare
+       
         if (closeButton != null)
             closeButton.gameObject.SetActive(false);
 
@@ -87,7 +87,7 @@ public class DoorPuzzleUI : MonoBehaviour
         selectedSprite = null;
     }
 
-    // chemat din PuzzleTraySlot.OnClick()
+ 
     public void SelectPieceFromTray(int trayIndex, Sprite sprite)
     {
         if (sprite == null)
@@ -102,7 +102,7 @@ public class DoorPuzzleUI : MonoBehaviour
         Debug.Log($"Selectat piesa: index={trayIndex}, sprite={sprite.name}");
     }
 
-    // chemat din PuzzleBoardSlot.OnClick()
+    
     public void TryPlaceOnSlot(int slotId, Image slotImage)
     {
         if (selectedPieceIndex < 0 || selectedSprite == null)
@@ -119,14 +119,14 @@ public class DoorPuzzleUI : MonoBehaviour
             return;
         }
 
-        // regula simplă: piesa merge doar pe slotId egal cu indexul ei
+        
         if (selectedPieceIndex != slotId)
         {
             Debug.Log($"Greșit! Piesa {selectedPieceIndex} nu merge pe slot {slotId}");
             return;
         }
 
-        // Plasare corectă pe board
+      
         slotImage.sprite = selectedSprite;
         slotImage.preserveAspect = true;
 
@@ -134,15 +134,15 @@ public class DoorPuzzleUI : MonoBehaviour
         c.a = 1f;
         slotImage.color = c;
 
-        // === NOU: șterge piesa din stânga (PiecesGrid) ===
+      
         ClearTrayIcon(selectedPieceIndex);
 
-        // deselect (după ce am folosit indexul)
+        
         ResetSelection();
 
         Debug.Log("Piesa pusă corect pe slot " + slotId);
 
-        // progres puzzle
+       
         correctPlacedCount++;
 
         int total = (boardSlots != null && boardSlots.Length > 0) ? boardSlots.Length : 9;
@@ -169,12 +169,12 @@ public class DoorPuzzleUI : MonoBehaviour
 
         icon.sprite = null;
 
-        // opțional: fă-l invizibil complet
+      
         var col = icon.color;
         col.a = 0f;
         icon.color = col;
 
-        // opțional: dezactivează raycast pe icon (nu e obligatoriu, click-ul e pe Slot)
+     
         icon.raycastTarget = false;
     }
 
@@ -189,10 +189,10 @@ public class DoorPuzzleUI : MonoBehaviour
             return;
         }
 
-        // afișăm butonul
+        
         closeButton.gameObject.SetActive(true);
 
-        // îl transformăm în NEXT
+      
         closeButton.onClick.RemoveAllListeners();
         closeButton.onClick.AddListener(GoToNextScene);
     }

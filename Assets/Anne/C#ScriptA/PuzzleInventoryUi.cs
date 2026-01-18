@@ -4,8 +4,8 @@ using UnityEngine.UI;
 public class PuzzleInventoryUI : MonoBehaviour
 {
     [Header("UI")]
-    public GameObject panel;   // InventoryPanel (poți pune chiar acest GameObject)
-    public Image[] slots;      // 9 sloturi
+    public GameObject panel;  
+    public Image[] slots;     
 
     private bool isOpen;
 
@@ -27,9 +27,7 @@ public class PuzzleInventoryUI : MonoBehaviour
         }
     }
 
-    // ===============================
-    // VARIANTA VECHE (pe ID fix)
-    // ===============================
+  
     public void ShowPiece(int id, Sprite sprite)
     {
         if (id < 0 || id >= slots.Length)
@@ -43,9 +41,7 @@ public class PuzzleInventoryUI : MonoBehaviour
         slots[id].color = c;
     }
 
-    // ===============================
-    // VARIANTA NOUĂ – în ordinea colectării
-    // ===============================
+   
     public int AddToFirstEmptySlot(Sprite sprite)
     {
         for (int i = 0; i < slots.Length; i++)

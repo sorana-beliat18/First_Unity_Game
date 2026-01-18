@@ -8,11 +8,10 @@ public class PortalTrigger2D : MonoBehaviour
     {
         if (!other.CompareTag("Player")) return;
 
-        // 👉 oprește și ascunde timerul
+        
         if (timer != null)
             timer.StopAndHideTimer();
 
-        // aici pui win / next level
     }
 }
 

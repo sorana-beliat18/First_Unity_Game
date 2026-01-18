@@ -31,8 +31,6 @@ public class LevelTimer2D : MonoBehaviour
             RestartLevel();
         }
     }
-
-    // 👉 CHEMAT când atingi portalul
     public void StopAndHideTimer()
     {
         running = false;

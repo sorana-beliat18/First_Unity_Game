@@ -16,7 +16,7 @@ public class PuzzlePiecePickup : MonoBehaviour
             ui.AddToFirstEmptySlot(s);
         }
 
-        // ✅ AICI este apelul corect
+       
         if (PuzzleCounter.Instance != null)
         {
             PuzzleCounter.Instance.AddPiece();

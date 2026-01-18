@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 
 public class TargetSlot : MonoBehaviour, IDropHandler
 {
-    public int slotId; // 0..8
+    public int slotId; 
     public bool occupied;
 
     private RectTransform snapPoint;
@@ -29,7 +29,6 @@ public class TargetSlot : MonoBehaviour, IDropHandler
         piece.SnapTo(snapPoint);
         occupied = true;
 
-        // aici poți incrementa un manager dacă vrei “Puzzle complet”
-        // PuzzleManager.Instance?.OnPiecePlacedCorrectly();
+       
     }
 }
