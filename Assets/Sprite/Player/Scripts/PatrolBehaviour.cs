@@ -24,12 +24,12 @@ public class PatrolBetweenPoints : MonoBehaviour
         pointB = temp;
     }
 
-    // Merge inițial spre dreapta
+    
     movingRight = true;
 
-    // 🔑 FIXUL REAL: sprite-ul e desenat spre STÂNGA
+
     Vector3 scale = transform.localScale;
-    scale.x = -Mathf.Abs(scale.x); // fața la dreapta
+    scale.x = -Mathf.Abs(scale.x); 
     transform.localScale = scale;
 }
 

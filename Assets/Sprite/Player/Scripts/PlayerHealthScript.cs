@@ -8,14 +8,17 @@ public class PlayerHealth : MonoBehaviour
 
     public HeartBarScript healthBar;
 
-    // SHIELD
     public bool isInvincible = false;
     public float shieldOpacity = 0.5f;
     public GameObject shieldVisual;
 
     private SpriteRenderer spriteRenderer;
 
-    // TOATE shield-urile din nivel
+    public AudioSource audioSource;
+    public AudioClip deathSound;
+
+
+    
     private ShieldPower[] shields;
 
     void Start()
@@ -28,11 +31,11 @@ public class PlayerHealth : MonoBehaviour
         if (shieldVisual != null)
             shieldVisual.SetActive(false);
 
-        // gasim toate shield-urile (inclusiv inactive)
+        
         shields = FindObjectsOfType<ShieldPower>(true);
     }
 
-    // APELAT DE INAMICI / CAPCANE
+
     public void TakeDamage(int damage)
     {
         if (isInvincible)
@@ -52,9 +55,12 @@ public class PlayerHealth : MonoBehaviour
     Die();
 }
 
-    // ☠️ MOARTE + RESPAWN
     void Die()
     {
+        if (audioSource != null && deathSound != null)
+    {
+        audioSource.PlayOneShot(deathSound);
+    }
         Vector3 respawnPosition;
 
         if (Checkpoint.reached)
@@ -66,11 +72,11 @@ public class PlayerHealth : MonoBehaviour
 
         transform.position = respawnPosition;
 
-        // reset viata
+        
         currentLives = maxLives;
         healthBar.SetHealth(currentLives);
 
-        // reset / restore stele
+        
         PlayerCollect pc = GetComponent<PlayerCollect>();
         if (pc != null)
         {
@@ -88,10 +94,10 @@ public class PlayerHealth : MonoBehaviour
 
         RespawnStars();
         RespawnPowerUps();
-        RespawnShields();   // 🔥 ASTA LIPSEA
+        RespawnShields();   
     }
 
-    // ⭐ RESPAWN STARS
+
     void RespawnStars()
     {
         StarRespawner[] stars = FindObjectsOfType<StarRespawner>(true);
@@ -114,7 +120,7 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
-    // 🛡️ RESPAWN SHIELDS LA MOARTE
+    
     void RespawnShields()
     {
         foreach (ShieldPower s in shields)
@@ -124,7 +130,7 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
-    // 🛡️ SHIELD / INVINCIBILITATE + OPACITATE
+    
     public void ActivateShield(float duration)
     {
         StartCoroutine(ShieldCoroutine(duration));
@@ -137,7 +143,7 @@ public class PlayerHealth : MonoBehaviour
         if (shieldVisual != null)
             shieldVisual.SetActive(true);
 
-        // opacitate mai mica
+        
         if (spriteRenderer != null)
         {
             Color c = spriteRenderer.color;
@@ -152,7 +158,7 @@ public class PlayerHealth : MonoBehaviour
         if (shieldVisual != null)
             shieldVisual.SetActive(false);
 
-        // opacitate normala
+        
         if (spriteRenderer != null)
         {
             Color c = spriteRenderer.color;

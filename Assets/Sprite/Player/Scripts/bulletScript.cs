@@ -18,8 +18,8 @@ public class bulletScript : MonoBehaviour
         {
           
 
-            Destroy(other.gameObject);      // distruge inamicul
-            Destroy(gameObject, 0.1f);      // distruge glonțul DUPĂ sunet
+            Destroy(other.gameObject);      
+            Destroy(gameObject, 0.1f);      
         }
     }
 }

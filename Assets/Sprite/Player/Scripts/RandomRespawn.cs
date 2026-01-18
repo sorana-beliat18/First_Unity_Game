@@ -14,7 +14,7 @@ public class RandomRespawn : MonoBehaviour
 
     private void enemySpawn()
     {
-        // recalculăm limitele camerei (pentru că se mișcă!)
+        
         screenBounds = Camera.main.ScreenToWorldPoint(
             new Vector3(Screen.width, Screen.height, 0)
         );

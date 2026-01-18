@@ -4,7 +4,7 @@ public class MovingPlatform : MonoBehaviour
 {
     public float speed = 2f;
     public Transform[] points;
-    public bool reverse;   // 👈 nou
+    public bool reverse;   
 
     private int i;
 

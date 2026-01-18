@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class SinkingPlatform : MonoBehaviour
 {
-    public float sinkSpeed = 1f;      // viteza de coborâre
-    public float maxSinkDistance = 1f; // cât poate coborî maxim
-    public float returnSpeed = 1f;    // viteza de revenire (0 = nu revine)
+    public float sinkSpeed = 1f;      
+    public float maxSinkDistance = 1f; 
+    public float returnSpeed = 1f;    
 
     private Vector3 startPos;
     private bool playerOnPlatform;

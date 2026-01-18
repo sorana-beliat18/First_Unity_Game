@@ -35,7 +35,7 @@ public class GhostScript : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // DAMAGE PLAYER
+        
         if (other.CompareTag("Player"))
         {
             PlayerHealth playerHealth =
@@ -47,7 +47,7 @@ public class GhostScript : MonoBehaviour
             }
         }
 
-        // EFECT TRANSPARENȚĂ (o singură dată)
+        
         if (!isTransparent)
         {
             StartCoroutine(TransparentEffect());

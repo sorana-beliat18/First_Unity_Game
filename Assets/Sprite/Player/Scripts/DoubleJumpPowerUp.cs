@@ -3,9 +3,9 @@ using System.Collections;
 
 public class DoubleJumpPowerUp : MonoBehaviour
 {
-    public float duration = 10f;      // cat timp dureaza double jump-ul
-    public int jumps = 1;              // cate sarituri extra
-    public float respawnTime = 30f;    // dupa cate secunde reapare
+    public float duration = 10f;    
+    public int jumps = 1;              
+    public float respawnTime = 30f;    
 
     private Collider2D col;
     private SpriteRenderer sr;
@@ -33,7 +33,7 @@ public class DoubleJumpPowerUp : MonoBehaviour
 
         Hide();
 
-        // pornește respawn-ul pe timer
+        
         if (respawnRoutine != null)
             StopCoroutine(respawnRoutine);
 
@@ -46,7 +46,7 @@ public class DoubleJumpPowerUp : MonoBehaviour
         Respawn();
     }
 
-    // 🔥 APELAT DE PlayerHealth LA MOARTE
+
     public void Respawn()
     {
         if (respawnRoutine != null)

@@ -28,7 +28,7 @@ public class SkeletonEnemy : MonoBehaviour
         col = GetComponent<Collider2D>();
         anim = GetComponent<Animator>();
 
-        // enemy inactiv la început
+        
         rb.simulated = false;
         col.enabled = false;
 
@@ -38,7 +38,7 @@ public class SkeletonEnemy : MonoBehaviour
         player = GameObject.FindGameObjectWithTag("Player").transform;
     }
 
-    // chemat din EnemyWakeUpTrigger
+    
     public void WakeUp()
     {
         rb.simulated = true;
@@ -60,7 +60,7 @@ public class SkeletonEnemy : MonoBehaviour
 
     void FixedUpdate()
     {
-        // 1️⃣ Iese din pământ
+        
         if (emerging)
         {
             Vector2 pos = Vector2.MoveTowards(
@@ -72,20 +72,20 @@ public class SkeletonEnemy : MonoBehaviour
             rb.MovePosition(pos);
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
         }
-        // 2️⃣ Urmărește player-ul
+        
         else if (chasing)
         {
             float dir = Mathf.Sign(player.position.x - rb.position.x);
             rb.linearVelocity = new Vector2(dir * chaseSpeed, rb.linearVelocity.y);
 
-            // 🔁 FLIP CORECT DUPĂ POZIȚIA PLAYER-ULUI
+            
             Vector3 scale = transform.localScale;
 
-            // Sprite-ul e desenat cu fața la STÂNGA
+          
             if (player.position.x > rb.position.x)
-                scale.x = -Mathf.Abs(scale.x); // privește dreapta
+                scale.x = -Mathf.Abs(scale.x); 
             else
-                scale.x = Mathf.Abs(scale.x);  // privește stânga
+                scale.x = Mathf.Abs(scale.x);  
 
             transform.localScale = scale;
         }

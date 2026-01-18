@@ -10,7 +10,7 @@ public class KillZone : MonoBehaviour
         PlayerHealth health = other.GetComponent<PlayerHealth>();
         if (health != null)
         {
-            health.KillInstant(); // 🔥 IGNORĂ SHIELD
+            health.KillInstant(); 
         }
     }
 }

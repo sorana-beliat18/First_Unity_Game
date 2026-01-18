@@ -25,7 +25,7 @@ public class Checkpoint : MonoBehaviour
             reached = true;
             respawnPoint = transform.position;
 
-            // ⭐ SALVEAZĂ STELUȚELE
+        
             PlayerCollect pc = other.GetComponent<PlayerCollect>();
             if (pc != null)
             {
