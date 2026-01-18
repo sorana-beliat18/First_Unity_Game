@@ -12,7 +12,7 @@ public class BossController : MonoBehaviour
     private SpriteRenderer spriteRenderer;
 
     [Header("Activation Settings")]
-    public bool needsActivation = false; // Bifează DOAR pentru FireWizard
+    public bool needsActivation = false;
     private bool isActuallyActive = true;
 
     [Header("Health & Stages")]
@@ -26,6 +26,14 @@ public class BossController : MonoBehaviour
     [Header("Movement")]
     public float moveSpeed = 4f;
     private bool isFacingRight = true;
+
+    [Header("Confusion Settings (FireWizard Only)")]
+    public bool usesConfusionLogic = false;
+    public Transform startPoint;
+    public AudioSource confusedSound;
+    public float depthThreshold = 6.0f;     // Diferența de înălțime (Y)
+    public float horizontalConfusionRange = 5.0f; // Cât de aproape orizontal (X) trebuie să fii ca să te observe
+    private bool isConfused = false;
 
     [Header("Jumping Logic")]
     public float jumpForce = 12f;
@@ -60,14 +68,12 @@ public class BossController : MonoBehaviour
         if (swordDrop != null)
             swordDrop.SetActive(false);
 
-        // Dacă are nevoie de activare, pornește "adormit"
         if (needsActivation)
         {
             isActuallyActive = false;
         }
     }
 
-    // Funcție publică ce va fi apelată de Trigger-ul de activare
     public void SetActivated(bool state)
     {
         isActuallyActive = state;
@@ -75,33 +81,45 @@ public class BossController : MonoBehaviour
 
     void Update()
     {
-        // Dacă nu este activat sau e mort, nu face nimic
         if (!isActuallyActive || !player || isDead)
         {
-            if (!isDead) StopMovement(); // Se asigură că stă în Idle
+            if (!isDead) StopMovement();
             return;
+        }
+
+        // --- LOGICA DE CONFUZIE REPARATĂ ---
+        if (usesConfusionLogic && !isConfused)
+        {
+            float yDifference = transform.position.y - player.position.y;
+            float xDifference = Mathf.Abs(transform.position.x - player.position.x);
+
+            // Zice "Huh?" DOAR dacă ești SUB el (Y) ȘI aproape de el pe orizontală (X)
+            if (yDifference > depthThreshold && xDifference < horizontalConfusionRange)
+            {
+                StartCoroutine(BecomeConfused());
+            }
         }
 
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.5f, groundLayer);
 
+        if (isConfused)
+        {
+            ReturnToStart();
+            return;
+        }
+
+        // --- LOGICA NORMALĂ ---
+        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
+
         if (isGrounded && rb.linearVelocity.y <= 0.1f)
         {
             animator.ResetTrigger("Jump");
-            if (animator.GetCurrentAnimatorStateInfo(0).IsName("FinalBoss_Jump"))
-            {
-                if (Mathf.Abs(rb.linearVelocity.x) > 0.1f)
-                    animator.Play("FinalBoss_Walk");
-                else
-                    animator.Play("FinalBoss_Idle");
-            }
         }
 
         if (rageLevel == 2)
         {
             transform.localPosition += (Vector3)Random.insideUnitCircle * shakeIntensity;
         }
-
-        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
 
         if (distanceToPlayer <= attackRange)
         {
@@ -118,8 +136,41 @@ public class BossController : MonoBehaviour
 
         if (animator != null)
             animator.SetBool("IsGrounded", isGrounded);
+    }
 
-        Debug.DrawRay(transform.position, isFacingRight ? Vector2.right * wallCheckDistance : Vector2.left * wallCheckDistance, Color.red);
+    IEnumerator BecomeConfused()
+    {
+        isConfused = true;
+        StopMovement();
+        if (confusedSound != null) confusedSound.Play();
+        yield return new WaitForSeconds(1.0f);
+    }
+
+    void ReturnToStart()
+    {
+        if (startPoint == null) { isConfused = false; return; }
+
+        float distanceToStart = Vector2.Distance(transform.position, startPoint.position);
+
+        if (distanceToStart > 0.5f)
+        {
+            float direction = (startPoint.position.x > transform.position.x) ? 1f : -1f;
+            rb.linearVelocity = new Vector2(direction * (moveSpeed * 0.8f), rb.linearVelocity.y);
+
+            if ((direction > 0 && !isFacingRight) || (direction < 0 && isFacingRight))
+                Flip();
+
+            if (animator != null) animator.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
+        }
+        else
+        {
+            StopMovement();
+            // Resetăm confuzia când ieși din groapă
+            if (transform.position.y - player.position.y < depthThreshold)
+            {
+                isConfused = false;
+            }
+        }
     }
 
     void MoveTowardsPlayer()
@@ -130,10 +181,8 @@ public class BossController : MonoBehaviour
         Vector2 rayDir = isFacingRight ? Vector2.right : Vector2.left;
         RaycastHit2D wallCheck = Physics2D.Raycast(transform.position, rayDir, wallCheckDistance, groundLayer);
         bool isLedgeAhead = !Physics2D.OverlapCircle(ledgeCheck.position, 0.2f, groundLayer);
-        RaycastHit2D ceilingCheck = Physics2D.Raycast(transform.position, Vector2.up, ceilingCheckDistance, groundLayer);
-        bool isPathClearAbove = (ceilingCheck.collider == null);
 
-        if (isGrounded && isPathClearAbove)
+        if (isGrounded)
         {
             if ((player.position.y > transform.position.y + jumpHeightThreshold) || (wallCheck.collider != null) || isLedgeAhead)
             {
@@ -151,15 +200,13 @@ public class BossController : MonoBehaviour
     void Jump()
     {
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-        if (animator != null)
-            animator.SetTrigger("Jump");
+        if (animator != null) animator.SetTrigger("Jump");
     }
 
     void StopMovement()
     {
         rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-        if (animator != null)
-            animator.SetFloat("Speed", 0f);
+        if (animator != null) animator.SetFloat("Speed", 0f);
     }
 
     void ExecuteAttack()
@@ -169,12 +216,7 @@ public class BossController : MonoBehaviour
         StopMovement();
         animator.SetTrigger("Attack");
         animator.SetInteger("RageLevel", rageLevel);
-
-        // Override Controller-ul se va ocupa de maparea corectă a animațiilor
-        string animName = (rageLevel == 0) ? "FinalBoss_Attack3" :
-                          (rageLevel == 1) ? "FinalBoss_Attack1" : "FinalBoss_Attack2";
-
-        animator.CrossFadeInFixedTime(animName, 0.1f);
+        animator.CrossFadeInFixedTime((rageLevel == 0) ? "FinalBoss_Attack3" : (rageLevel == 1) ? "FinalBoss_Attack1" : "FinalBoss_Attack2", 0.1f);
         player.SendMessage("TakeDamage", 1, SendMessageOptions.DontRequireReceiver);
     }
 
@@ -184,7 +226,6 @@ public class BossController : MonoBehaviour
         currentHealth -= damage;
         if (currentHealth < maxHealth / 2) animator.SetTrigger("Protect");
         else animator.SetTrigger("Hurt");
-
         if (currentHealth <= rage1Threshold && rageLevel == 0) ActivateRage1();
         else if (currentHealth <= rage2Threshold && rageLevel == 1) ActivateRage2();
         if (currentHealth <= 0) StartCoroutine(DieSequence());
@@ -192,10 +233,7 @@ public class BossController : MonoBehaviour
 
     void ActivateRage1()
     {
-        rageLevel = 1;
-        moveSpeed += 2f;
-        jumpForce += 2f;
-        transform.localScale *= 1.01f;
+        rageLevel = 1; moveSpeed += 2f; jumpForce += 2f;
         if (spriteRenderer != null) spriteRenderer.color = new Color(1f, 0.4f, 0.4f);
         if (rageSound != null) rageSound.Play();
         animator.SetInteger("RageLevel", 1);
@@ -203,10 +241,7 @@ public class BossController : MonoBehaviour
 
     void ActivateRage2()
     {
-        rageLevel = 2;
-        moveSpeed += 1.5f;
-        jumpForce += 2f;
-        transform.localScale *= 1.02f;
+        rageLevel = 2; moveSpeed += 1.5f; jumpForce += 2f;
         if (spriteRenderer != null) spriteRenderer.color = Color.red;
         if (rageSound != null) rageSound.Play();
         animator.SetInteger("RageLevel", 2);
@@ -214,11 +249,7 @@ public class BossController : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.collider.GetComponent<bulletScript>() != null)
-        {
-            TakeDamage(10f);
-            Destroy(collision.gameObject);
-        }
+        if (collision.collider.GetComponent<bulletScript>() != null) { TakeDamage(10f); Destroy(collision.gameObject); }
     }
 
     void Flip()
@@ -229,21 +260,10 @@ public class BossController : MonoBehaviour
 
     IEnumerator DieSequence()
     {
-        isDead = true;
-        rb.linearVelocity = Vector2.zero;
-        rb.bodyType = RigidbodyType2D.Kinematic;
+        isDead = true; rb.linearVelocity = Vector2.zero; rb.bodyType = RigidbodyType2D.Kinematic;
         GetComponent<Collider2D>().enabled = false;
-
         if (animator != null) animator.Play("FinalBoss_Dead");
-
-        if (swordDrop != null)
-        {
-            swordDrop.SetActive(true);
-            swordDrop.transform.position = transform.position;
-            SpriteRenderer swordSR = swordDrop.GetComponent<SpriteRenderer>();
-            if (swordSR != null) swordSR.sortingOrder = 10;
-        }
-
+        if (swordDrop != null) { swordDrop.SetActive(true); swordDrop.transform.position = transform.position; }
         yield return new WaitForSeconds(1.0f);
         Destroy(gameObject);
     }
@@ -253,35 +273,15 @@ public class BossController : MonoBehaviour
 
     private void OnTriggerStay2D(Collider2D other)
     {
-        if (other.CompareTag("JumpPoint"))
+        if (other.CompareTag("JumpPoint") && Time.time > lastJumpTime + jumpCooldown)
         {
-            if (Time.time > lastJumpTime + jumpCooldown)
+            if (player.position.y > transform.position.y + 1.0f)
             {
-                if (player.position.y > transform.position.y + 1.0f)
-                {
-                    JumpPointConfig config = other.GetComponent<JumpPointConfig>();
-                    if (config != null)
-                    {
-                        rb.linearVelocity = new Vector2(rb.linearVelocity.x, config.customJumpForce);
-                        animator.SetTrigger("Jump");
-                        lastJumpTime = Time.time;
-                    }
-                    else
-                    {
-                        Jump();
-                        lastJumpTime = Time.time;
-                    }
-                }
+                JumpPointConfig config = other.GetComponent<JumpPointConfig>();
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, config != null ? config.customJumpForce : jumpForce);
+                animator.SetTrigger("Jump");
+                lastJumpTime = Time.time;
             }
-        }
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        if (groundCheck != null)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(groundCheck.position, 0.5f);
         }
     }
 }
