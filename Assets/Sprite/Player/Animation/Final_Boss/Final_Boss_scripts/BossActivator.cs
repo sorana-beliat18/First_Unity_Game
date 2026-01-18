@@ -13,7 +13,7 @@ public class BossActivator : MonoBehaviour
                 bossScript.SetActivated(true);
                 Debug.Log("Boss activat!");
             }
-            Destroy(gameObject); // Se distruge trigger-ul dupã folosire
+            Destroy(gameObject); 
         }
     }
 }

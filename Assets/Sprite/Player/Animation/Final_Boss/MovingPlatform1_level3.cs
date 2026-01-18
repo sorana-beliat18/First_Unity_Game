@@ -25,7 +25,6 @@ public class MovingPlatform1_level3 : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        // Verificăm dacă este Player-ul și dacă platforma este activă
         if (collision.gameObject.CompareTag("Player") && gameObject.activeInHierarchy)
         {
             collision.transform.SetParent(transform);
@@ -36,14 +35,12 @@ public class MovingPlatform1_level3 : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            // Aceasta este linia critică: verificăm dacă platforma ȘI jucătorul sunt încă activi
             if (gameObject.activeInHierarchy && collision.gameObject.activeInHierarchy)
             {
                 collision.transform.SetParent(null);
             }
             else
             {
-                // Dacă unul dintre ele se dezactivează, forțăm detașarea fără eroare
                 collision.transform.parent = null;
             }
         }

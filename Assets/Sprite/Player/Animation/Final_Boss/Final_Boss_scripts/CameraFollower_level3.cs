@@ -6,25 +6,20 @@ public class CameraFollower_Custom : MonoBehaviour
     public float FollowSpeed = 2f;
 
     [Header("Offsets")]
-    public float xOffset = 2f; // Pozitiv mută camera mai în față
+    public float xOffset = 2f;
     public float yOffset = 1.5f;
 
     [Header("Limita Hartii (Borders)")]
     public bool useLimits = true;
-    public float minX = 0f;    // Limita stânga
-    public float maxX = 100f;  // Limita dreapta
-    public float minY = -2f;   // Limita jos
-    public float maxY = 15f;   // Limita sus
-
+    public float minX = 0f;    //stânga
+    public float maxX = 100f;  //dreapta
+    public float minY = -2f;   //jos
+    public float maxY = 15f;   //sus
     void LateUpdate()
     {
         if (target == null) return;
-
-        // Calculăm poziția dorită cu offset-uri
         float desiredX = target.position.x + xOffset;
         float desiredY = target.position.y + yOffset;
-
-        // Aplicăm limitele (Clamping) ca să nu mai vezi "golul"
         if (useLimits)
         {
             desiredX = Mathf.Clamp(desiredX, minX, maxX);

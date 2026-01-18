@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement; // Avem nevoie de asta pentru a schimba scenele
-using System.Collections; // Avem nevoie de asta pentru secvența de așteptare
+using UnityEngine.SceneManagement; 
+using System.Collections; 
 
 public class FinalGirlTrigger : MonoBehaviour
 {
@@ -13,8 +13,7 @@ public class FinalGirlTrigger : MonoBehaviour
     public GameObject iconitaItem3;
 
     [Header("Setari Victorie")]
-    public string numeScenaWin = "WinScreen"; // Scrie aici numele EXACT al scenei de victorie
-
+    public string numeScenaWin = "Win_Screen"; 
     void Start()
     {
         audioSource = GetComponent<AudioSource>();
@@ -36,8 +35,6 @@ public class FinalGirlTrigger : MonoBehaviour
         if (iconitaItem1 == null || iconitaItem2 == null || iconitaItem3 == null) return false;
         return iconitaItem1.activeSelf && iconitaItem2.activeSelf && iconitaItem3.activeSelf;
     }
-
-    // Aceasta este o "Corutina" - permite jocului sa astepte cateva secunde
     IEnumerator SequenceVictorie()
     {
         hasPlayed = true;
@@ -46,12 +43,10 @@ public class FinalGirlTrigger : MonoBehaviour
         {
             audioSource.Play();
 
-            // Asteptam pana cand sunetul se termina (ex: 2 secunde)
-            // Poti pune exact durata sunetului tau "Yey"
+
             yield return new WaitForSeconds(audioSource.clip.length);
         }
 
-        // Dupa ce a trecut timpul, incarcam scena de Win
         Debug.Log("Incarcam Winscreen...");
         SceneManager.LoadScene(numeScenaWin);
     }

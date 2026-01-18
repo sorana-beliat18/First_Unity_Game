@@ -2,7 +2,7 @@
 
 public class SlimeBounce : MonoBehaviour
 {
-    public float bounceForce = 15f; // Ajustează forța aici
+    public float bounceForce = 15f; 
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -11,11 +11,8 @@ public class SlimeBounce : MonoBehaviour
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
             rb.AddForce(Vector2.up * bounceForce, ForceMode2D.Impulse);
-
-            // --- ADAUGĂ ASTA ---
             AudioSource audio = GetComponent<AudioSource>();
             if (audio != null) audio.Play();
-            // -------------------
         }
     }
 }

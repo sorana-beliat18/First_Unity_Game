@@ -11,13 +11,11 @@ public class MovingPlatform2_level3 : MonoBehaviour
 
     void Start()
     {
-        // Salvăm poziția de unde pleacă platforma la începutul jocului
         startPos = transform.position;
     }
 
     void Update()
     {
-        // Calculăm mișcarea stânga-dreapta ca un pendul
         float movement = Mathf.PingPong(Time.time * speed, distance);
 
         if(invert) movement=-movement;
@@ -28,7 +26,6 @@ public class MovingPlatform2_level3 : MonoBehaviour
             transform.position = startPos + new Vector3(0, movement, 0);
     }
 
-    // Această funcție face ca jucătorul să se miște ODATĂ cu platforma când stă pe ea
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Player") || collision.gameObject.CompareTag("Boss"))
@@ -37,7 +34,6 @@ public class MovingPlatform2_level3 : MonoBehaviour
         }
     }
 
-    // Când jucătorul sare de pe platformă, nu mai este "purtat" de ea
     private void OnCollisionExit2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Player") || collision.gameObject.CompareTag("Boss"))

@@ -31,8 +31,8 @@ public class BossController : MonoBehaviour
     public bool usesConfusionLogic = false;
     public Transform startPoint;
     public AudioSource confusedSound;
-    public float depthThreshold = 6.0f;     // Diferența de înălțime (Y)
-    public float horizontalConfusionRange = 5.0f; // Cât de aproape orizontal (X) trebuie să fii ca să te observe
+    public float depthThreshold = 6.0f;     
+    public float horizontalConfusionRange = 5.0f; 
     private bool isConfused = false;
 
     [Header("Jumping Logic")]
@@ -87,13 +87,10 @@ public class BossController : MonoBehaviour
             return;
         }
 
-        // --- LOGICA DE CONFUZIE REPARATĂ ---
         if (usesConfusionLogic && !isConfused)
         {
             float yDifference = transform.position.y - player.position.y;
             float xDifference = Mathf.Abs(transform.position.x - player.position.x);
-
-            // Zice "Huh?" DOAR dacă ești SUB el (Y) ȘI aproape de el pe orizontală (X)
             if (yDifference > depthThreshold && xDifference < horizontalConfusionRange)
             {
                 StartCoroutine(BecomeConfused());
@@ -108,7 +105,6 @@ public class BossController : MonoBehaviour
             return;
         }
 
-        // --- LOGICA NORMALĂ ---
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
 
         if (isGrounded && rb.linearVelocity.y <= 0.1f)
@@ -165,7 +161,6 @@ public class BossController : MonoBehaviour
         else
         {
             StopMovement();
-            // Resetăm confuzia când ieși din groapă
             if (transform.position.y - player.position.y < depthThreshold)
             {
                 isConfused = false;

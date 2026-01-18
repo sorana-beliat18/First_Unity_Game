@@ -8,9 +8,9 @@ public class PlayerHealth_level3 : PlayerHealth
     public AudioSource jumpSound;
     public AudioSource attackSound;
     public AudioSource hurtSound;
-    public AudioSource deathSound; // Am adăugat și unul de moarte
+    public AudioSource deathSound; 
 
-    private bool isDead = false; // Ca să nu dea restart de mai multe ori
+    private bool isDead = false; 
 
     private void Update()
     {
@@ -42,7 +42,7 @@ public class PlayerHealth_level3 : PlayerHealth
 
         if (currentLives <= 0)
         {
-            StartCoroutine(DieWithDelay()); // Pornim restartul cu pauză
+            StartCoroutine(DieWithDelay()); 
         }
     }
 
@@ -53,11 +53,10 @@ public class PlayerHealth_level3 : PlayerHealth
 
         if (deathSound != null) deathSound.Play();
 
-        // Opțional: Dezactivăm SpriteRenderer-ul ca să pară că a dispărut
         GetComponent<SpriteRenderer>().enabled = false;
-        GetComponent<MonoBehaviour>().enabled = false; // Oprește mișcarea
+        GetComponent<MonoBehaviour>().enabled = false; 
 
-        yield return new WaitForSeconds(2.0f); // Așteptăm 2 secunde
+        yield return new WaitForSeconds(2.0f); 
 
         string currentSceneName = SceneManager.GetActiveScene().name;
         SceneManager.LoadScene(currentSceneName);
