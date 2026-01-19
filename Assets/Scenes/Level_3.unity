@@ -24570,7 +24570,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11ff66f27a781dd43a9a6cace6c52196, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
-  player: {fileID: 0}
+  player: {fileID: 1372726640}
   rb: {fileID: 416828693}
   animator: {fileID: 416828694}
   rageSound: {fileID: 416828695}
